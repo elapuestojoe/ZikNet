@@ -1,3 +1,4 @@
+import sys
 import xml.etree.ElementTree
 import json
 
@@ -13,10 +14,16 @@ def getContacts(contactList):
 
 	return dictionary
 
-# e = xml.etree.ElementTree.parse('CatemacoBaseline_HET 41898.xml').getroot()
+filename = "CatemacoBaseline_HET 41898.xml"
+if(len(sys.argv) < 2):
+	filename = sys.argv[2] 
+else:
+	print("ERROR, taking default file")
+
+e = xml.etree.ElementTree.parse(filename).getroot()
 # e = xml.etree.ElementTree.parse('CatemacoFogging_HET 24959.xml').getroot()
 # e = xml.etree.ElementTree.parse('CatemacoOxitec_HET 26749.xml').getroot()
-e = xml.etree.ElementTree.parse('CatemacoWolbachia_HET 1238.xml').getroot()
+# e = xml.etree.ElementTree.parse('CatemacoWolbachia_HET 1238.xml').getroot()
 
 
 final_outputs = e.find('final_outputs')

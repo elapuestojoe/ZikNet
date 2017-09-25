@@ -4,9 +4,14 @@ mylist2 <- lapply(mylist2, as.character)
 close(data2)
 
 library(igraph)
+library(NetIndices)
 
 test <- unlist(mylist2)
 network <- graph(edges = c(test), directed = TRUE)
+
+V(network)
+E(network)
+network.adj<-get.adjacency(network,sparse=F)
 
 plot(network)
 

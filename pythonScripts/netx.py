@@ -41,12 +41,13 @@ def draw_graph(nodes, edges, infectedPeople):
 contactList, biteList, timeList = parseContacts()
 
 # Lo interesante, modelar la epidemia
+susceptible = contactList
 infectedPeople = [random.choice(contactList)]
 infectedMosquitoes = []
-probabilityOfTransimission = 0.05
+probabilityOfTransimission = 0.1
 edges = []
 timeListSortedKeys = sorted(timeList.keys())
-print(infectedPeople)
+exposed = {}
 for key in timeListSortedKeys:
     currentMosquitoes = timeList[key]
 
@@ -57,17 +58,21 @@ for key in timeListSortedKeys:
         bited = currentBiteList["bites"][i]
         
         if(bited in infectedPeople):
-            # Random prob of mosquito getting infected
-            if(random.random()<= probabilityOfTransimission):
+            # pVH Transmission probability from an infectious human to a susceptible mosquito per bite    0.3–0.75   
+             # (Gao et al., 2016; Andraud et al., 2012; Chikaki and Ishikawa, 2009)
+
+            probability = random.uniform(0.3, 0.75)
+            if(random.random()<= probability):
                 if(mosquito not in infectedMosquitoes):
                     infectedMosquitoes.append(mosquito)
         else:
+            # pHV Transmission probability from an infectious mosquito to a susceptible human per bite    0.1–0.75    
+            # (Gao et al., 2016; Andraud et al., 2012; Chikaki and Ishikawa, 2009)
             if(mosquito in infectedMosquitoes and bited not in infectedPeople):
-                infectedPeople.append(bited)
-                edges.append((currentBiteList["bites"][i-1], currentBiteList["bites"][i]))
+                if(random.random()<= random.uniform(0.75,1)):
+                    infectedPeople.append(bited)
+                    edges.append((currentBiteList["bites"][i-1], currentBiteList["bites"][i]))
 
 print(edges)
-print(infectedMosquitoes)
 # Fin de simulación de epidemia
-print(infectedMosquitoes)
 draw_graph(contactList, edges, infectedPeople)

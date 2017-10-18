@@ -3,7 +3,9 @@ import matplotlib.pyplot as plt
 import random
 from netParse import parseContacts
 
-def draw_graph(nodes, edges, infectedPeople):
+# 1 tick/5 minutes
+
+def draw_graph(nodes, edges, infectedPeople, susceptible, exposed, recovered):
 
     # extract nodes from graph
     # nodes = set([n1 for n1, n2 in graph] + [n2 for n1, n2 in graph])
@@ -23,8 +25,12 @@ def draw_graph(nodes, edges, infectedPeople):
     for node in G:
         if node in infectedPeople:
             color_map.append("red")
-        else:
+        elif node in susceptible:
             color_map.append("green")
+        elif node in exposed:
+            color_map.append("orange")
+        elif node in recovered:
+            color_map.append("yellow")
 
     # draw graph
     pos = nx.shell_layout(G)
@@ -41,16 +47,25 @@ def draw_graph(nodes, edges, infectedPeople):
 contactList, biteList, timeList = parseContacts()
 
 # Lo interesante, modelar la epidemia
-susceptible = contactList
-infectedPeople = [random.choice(contactList)]
-infectedMosquitoes = []
-probabilityOfTransimission = 0.1
-edges = []
 timeListSortedKeys = sorted(timeList.keys())
 exposed = {}
+randomInfected = random.choice(contactList)
+initialTime = 0 if len(timeListSortedKeys) == 0 else int(timeListSortedKeys[0])
+infectedPeople = {randomInfected: initialTime}
+
+susceptible = contactList.copy()
+susceptible.remove(randomInfected)
+recovered = {}
+asymptomatic = {}
+infectedMosquitoes = []
+
+edges = []
+
+# Proportion of individuals who are asymptomatic  0.80    (ZWG, 2016)
+fourDays = 69120
 for key in timeListSortedKeys:
     currentMosquitoes = timeList[key]
-
+    currTime = int(key)
     for mosquito in currentMosquitoes:
         # Get time/bite
         currentBiteList = biteList[mosquito]
@@ -60,7 +75,6 @@ for key in timeListSortedKeys:
         if(bited in infectedPeople):
             # pVH Transmission probability from an infectious human to a susceptible mosquito per bite    0.3–0.75   
              # (Gao et al., 2016; Andraud et al., 2012; Chikaki and Ishikawa, 2009)
-
             probability = random.uniform(0.3, 0.75)
             if(random.random()<= probability):
                 if(mosquito not in infectedMosquitoes):
@@ -68,11 +82,37 @@ for key in timeListSortedKeys:
         else:
             # pHV Transmission probability from an infectious mosquito to a susceptible human per bite    0.1–0.75    
             # (Gao et al., 2016; Andraud et al., 2012; Chikaki and Ishikawa, 2009)
-            if(mosquito in infectedMosquitoes and bited not in infectedPeople):
-                if(random.random()<= random.uniform(0.75,1)):
-                    infectedPeople.append(bited)
-                    edges.append((currentBiteList["bites"][i-1], currentBiteList["bites"][i]))
 
-print(edges)
+            # 1/fH    Duration of human latent period, E (days)   4   (Turmel et al., 2016; Bearcroft, 1956)
+            # 345600
+            if(mosquito in infectedMosquitoes and bited in susceptible):
+                # if(random.random()<= random.uniform(0.75,1)):
+                if(random.random()<= random.uniform(0.25,0.5)):
+                    exposed[bited] = currTime
+                    susceptible.remove(bited)
+                    edges.append((currentBiteList["bites"][0], currentBiteList["bites"][i]))
+
+    removals = []
+    for e in exposed:
+        if(currTime >= exposed[e]+fourDays):
+            infectedPeople[e] = currTime
+            removals.append(e)
+    for r in removals:
+        exposed.pop(r)
+
+    removals = []
+    for e in infectedPeople:
+        if(currTime >= infectedPeople[e]+fourDays):
+            recovered[e] = currTime
+            removals.append(e)
+    for r in removals:
+        infectedPeople.pop(r)
+
+# print(edges)
 # Fin de simulación de epidemia
-draw_graph(contactList, edges, infectedPeople)
+print("S",susceptible)
+print("E",exposed)
+print("I",infectedPeople)
+print("R",recovered)
+# print("CURRENTTIME", timeListSortedKeys[-1])
+draw_graph(contactList, edges, infectedPeople, susceptible, exposed, recovered)

@@ -26,10 +26,10 @@ def parseContacts():
 	else:
 		print("ERROR, taking default file")
 
-	# e = xml.etree.ElementTree.parse(filename).getroot()
-	# e = xml.etree.ElementTree.parse('CatemacoFogging_HET 24959.xml').getroot()
-	# e = xml.etree.ElementTree.parse("CatemacoBaseline5.xml")
-	e = xml.etree.ElementTree.parse('CatemacoOxitec_HET 26749.xml').getroot()
+	e = xml.etree.ElementTree.parse(filename).getroot()
+	e = xml.etree.ElementTree.parse('CatemacoFogging_HET 24959.xml').getroot()
+	# e = xml.etree.ElementTree.parse("Validation.xml")
+	# e = xml.etree.ElementTree.parse('CatemacoOxitec_HET 26749.xml').getroot()
 	# e = xml.etree.ElementTree.parse('CatemacoWolbachia_HET 1238.xml').getroot()
 
 

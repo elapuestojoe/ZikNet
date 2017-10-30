@@ -166,6 +166,7 @@ def plotSEIR():
     plt.plot(keys, R, "bo")
     plt.axis([0,keys[-1],0,maxY])
     plt.show()
-plotSEIR()
+
 # print("CURRENTTIME", timeListSortedKeys[-1])
 draw_graph(contactList, edges, infectedPeople, susceptible, exposed, recovered)
+plotSEIR()

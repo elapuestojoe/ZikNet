@@ -5,7 +5,6 @@ import json
 # graph
 import networkx as nx
 import matplotlib.pyplot as plt
-
 def parseContacts():
 
 	def getContacts(contactList):
@@ -27,7 +26,7 @@ def parseContacts():
 		print("ERROR, taking default file")
 
 	e = xml.etree.ElementTree.parse(filename).getroot()
-	e = xml.etree.ElementTree.parse('CatemacoFogging_HET 24959.xml').getroot()
+	# e = xml.etree.ElementTree.parse('CatemacoFogging_HET 24959.xml').getroot()
 	# e = xml.etree.ElementTree.parse("Validation.xml")
 	# e = xml.etree.ElementTree.parse('CatemacoOxitec_HET 26749.xml').getroot()
 	# e = xml.etree.ElementTree.parse('CatemacoWolbachia_HET 1238.xml').getroot()

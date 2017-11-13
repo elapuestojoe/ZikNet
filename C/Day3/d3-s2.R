@@ -13,6 +13,9 @@ library(EpiModel)
 # Initialize the network
 nw <- network.initialize(n = 500, directed = FALSE)
 
+nw
+
+
 # Define the formation model
 formation <- ~edges + concurrent + degrange(from = 4)
 

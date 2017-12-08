@@ -19,4 +19,6 @@ plot(network)
 nw <- network.initialize(n = 30, directed = TRUE)
 nw
 
+plot(nw)
+
  

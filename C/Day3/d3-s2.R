@@ -11,7 +11,7 @@ library(EpiModel)
 # Network model estimation ------------------------------------------------
 
 # Initialize the network
-nw <- network.initialize(n = 500, directed = FALSE)
+nw <- network.initialize(n = 30, directed = TRUE)
 
 nw
 

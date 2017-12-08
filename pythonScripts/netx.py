@@ -58,7 +58,7 @@ exposed = {}
 SEIR = {}
 
 # infectar a 2 personas
-randomInfected = random.sample(contactList,2)
+randomInfected = random.sample(contactList,3)
 initialTime = 0 if len(timeListSortedKeys) == 0 else int(timeListSortedKeys[0])
 infectedPeople = {}
 susceptible = contactList.copy()

@@ -19,16 +19,16 @@ def parseContacts():
 
 		return dictionary
 
-	filename = "CatemacoBaseline_HET 41898.xml"
+	# filename = "CatemacoBaseline_HET 41898.xml"
 	if(len(sys.argv) == 2):
 		filename = sys.argv[2] 
 	else:
 		print("ERROR, taking default file")
 
-	e = xml.etree.ElementTree.parse(filename).getroot()
+	# e = xml.etree.ElementTree.parse(filename).getroot()
 	# e = xml.etree.ElementTree.parse('CatemacoFogging_HET 24959.xml').getroot()
 	# e = xml.etree.ElementTree.parse("Validation.xml")
-	# e = xml.etree.ElementTree.parse('CatemacoOxitec_HET 26749.xml').getroot()
+	e = xml.etree.ElementTree.parse('CatemacoOxitec_HET 26749.xml').getroot()
 	# e = xml.etree.ElementTree.parse('CatemacoWolbachia_HET 1238.xml').getroot()
 
 

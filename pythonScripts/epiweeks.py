@@ -10,23 +10,27 @@ import datetime
 # and ends on a Saturday.
 
 def getFirstSundayEpiWeek(year):
-	month = 1
-	day = 1
-	day += 7 - datetime.datetime(year,month,day).isocalendar()[2] #daynumber
+	# month = 1
+	# day = 1
+	# day += 7 - datetime.datetime(year,month,day).isocalendar()[2] #daynumber
 
-	if(day > 4):
-		year -= 1
-		month = 12
-		day = 31 - (7-day)
-	return datetime.datetime(year,month,day)
+	# if(day > 4):
+	# 	year -= 1
+	# 	month = 12
+	# 	day = 31 - (7-day)
+
+	d = input("Enter first sunday of epidemiological year in DD-MM-YYYY format: ")
+	d = [int(i) for i in d.split("-")]
+	return datetime.datetime(d[2],d[1],d[0])
 
 def getEpidemiologicalWeeks(year):
 	start = getFirstSundayEpiWeek(year)
 	nextWeek = getNextWeek(start)
 	weeks = [start]
 	for i in range(51):
-		weeks.append(nextWeek)
-		nextWeek = getNextWeek(nextWeek)
+		if(nextWeek < datetime.datetime.today()):
+			weeks.append(nextWeek)
+			nextWeek = getNextWeek(nextWeek)	
 	return weeks
 
 def getYMD(timeframe):

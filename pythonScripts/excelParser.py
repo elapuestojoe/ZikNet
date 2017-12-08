@@ -1,13 +1,13 @@
 import pandas as pd
 import os
-directory = os.fsencode("2016Data")
+directory = os.fsencode("2017Data")
 
 casesPerCity = {}
 dates = []
 for file in sorted(os.listdir(directory)):
 	filename = os.fsdecode(file)
 
-	excel = pd.read_csv("2016Data/{}".format(filename), 
+	excel = pd.read_csv("2017Data/{}".format(filename), 
 		usecols=["report_date", "location", "data_field", "value"])
 
 	weeklyConfirmed = excel.loc[excel["data_field"] == "weekly_zika_confirmed"]
@@ -29,7 +29,7 @@ for file in sorted(os.listdir(directory)):
 		casesPerCity[row.location].append(row.value)
 	dates.append(date)
 
-file= open("2016Cases.csv", "w")
+file= open("2017Cases.csv", "w")
 file.write("CITY,")
 file.write(",".join(dates))
 file.write("\n")

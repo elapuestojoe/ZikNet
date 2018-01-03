@@ -1,0 +1,166 @@
+;;***************************HEADERS************************************************************************************************************
+;act-mosquito-day :: Controls the mosquitos activities during daytime
+;act-mosquito-night :: Controls the mosquitos activities during night time
+;act-hungry :: Increases hunger level and kills mosquito of starvation is needed
+;act-feed :: Feeding routines
+;act-resetFemale :: Returns females to a state where they can begin their reproductive cycle
+;act-dead :: Finishing actions of mosquitos while dying
+;act-egg :: Actions performed while in egg phase
+;act-larva :: Actions performed while in larva phase
+;act-pupa :: Actions performed while in pupa phase
+;act-adult :: Actions performed while in adult phase
+;act-adult-night :: Actions performed while in adult phase by night
+;probabilistic-natural-death :: Death by senescence 
+;probabilistic-die-by-predation :: Predation population cap (not biologically justified)
+;probabilistic-die-by-starvation :: Artificial death by starvation (should not be used)
+;;****************************BODY**************************************************************************************************************
+;;DAYNIGHTACTIVITIES---------------------------------------------------------
+to act-mosquito-day
+  if(life_stage = 0)[act-egg]
+  if(life_stage = 1)[act-larva]
+  if(life_stage = 2)[act-pupa]
+  if(life_stage = 3)[act-adult]
+end
+to act-mosquito-night
+  ;Think wether it is sensible to activate or not
+  if(life_stage = 0)[act-egg]
+  if(life_stage = 1)[act-larva]
+  if(life_stage = 2)[act-pupa]
+  if(life_stage = 3)[act-adult-night]
+end
+;;---------------------------------------------------------
+to act-hungry
+  ;Update the hunger quantity and kill if starved
+  set hunger (hunger + MOSQUITO_FEEDING_RATE)
+  if(hunger > 1)[act-dead];show "Starved" act-dead]  
+end
+to act-feed
+  ;Detects sugar sources and gets close to feed from them
+  let closest_sugar_zones ((sugars in-radius MOSQUITO_DETECTION_RADIUS) with [food > SOURCE_DECREASE])
+  let closest_sugarBaits ((sugarBaits in-radius MOSQUITO_DETECTION_RADIUS) with [food > SOURCE_DECREASE])
+  let closest_sugar (min-one-of (turtle-set closest_sugar_zones closest_sugarBaits) [distance myself])
+  ;Perform feeding actions
+  ifelse(closest_sugar != nobody)
+  [
+    ;Sugar source in range
+    move-probabilistically-towards closest_sugar (item 4 movement_speeds) MOSQUITO_MOVEMENT_FOCUS MOSQUITO_MOVEMENT_SPEED_DEVIATION
+    if((distance closest_sugar) < MOSQUITO_ACTION_RADIUS)
+    [
+      ifelse(is-sugarBait? closest_sugar)[
+        ;Bait routine
+        set hunger 0
+        act-dead
+      ][
+        ;Sugar routine
+        if(([food] of closest_sugar) > 0)
+        [
+          if(FOOD_DYNAMICS?)[ask closest_sugar[set food (food - SOURCE_DECREASE)]];ifelse(food - SOURCE_DECREASE > 0)[set food (food - SOURCE_DECREASE)][set food 0]]]
+          set hunger 0
+        ]
+      ]
+    ]
+  ]
+  [
+    ;No sugar source in range. Random walk search.
+    move-pseudo-random-walking ((item 3 movement_speeds) / 10) MOSQUITO_MOVEMENT_SPEED_DEVIATION
+  ]
+end
+to act-resetFemale
+  ;Resets female variables so that they can develop eggs again
+  set laidEggs? false
+  set bloodfed? false
+  set gonotrophic_cooldown (mean (list GONOTROPHICA1_TICKS_DURATION GONOTROPHICA2_TICKS_DURATION))
+  set feeding_cooldown floor (random-normal BLOODFEED_COOLDOWN BLOODFEED_COOLDOWN_DISPERSION)
+end
+to act-dead
+  ;Mosquito actions while dying state (finalizes bites list)**
+  if(length bitten_list > 1)[
+    file-open "mosquitos.txt"
+    file-print (word "{" bitten_list "}")
+    set GLOBAL_BITES_LIST lput (word "{" bitten_list "}") GLOBAL_BITES_LIST
+    set life_stage_ticks_list (lput life_stage_ticks life_stage_ticks_list)
+  ]
+  ;if((female? = true) and (life_stage > 2) and (ovipositionCounter > 0))[set ovipositions_count lput ovipositionCounter ovipositions_count] ;INEFFICIENT!!!!!!!!!!!!!!!!!!!!!
+  ;if(life_stage > 2 and length life_stage_ticks_list > 0)[set adultAgesList (lput (convert_ratio_days_to_ticks (last life_stage_ticks_list)) adultAgesList)];INEFFICIENT!!!!!!!!!!!!!!!!!!!!!
+  ;set mosquitoLifespan (lput (convert_ratio_days_to_ticks (sum life_stage_ticks_list)) mosquitoLifespan) ;INEFFICIENT!!!!!!!!!!!!!!!!!!!!!
+  die
+end
+;;Specific life stages actions-----------------------------------------
+to act-egg
+  ;Mosquito actions while in egg state**
+  ;Static death rates
+  if(random-bool TICK_EGG_DEATH_PROBABILITY)[act-dead]
+  ;Density dependent death probability
+  if((random-bool EGG_DEATH_BY_INHIBITION_PROBABILITY) and (metabolic_rate > .8) and (EGG_INHIBITION?))[
+     set EGG_DEATH_BY_INHIBITION_PROBABILITY (larva-density-egg-hatching-inhibition ((count aedesP with [life_stage = 1]) - 1) (count breedingZones))
+     act-dead
+  ]
+  update_metabolic_rate 0
+end
+to act-larva  
+  ;Mosquito actions while in larva state**
+  ;Static death rates
+  if(random-bool (larva-mortality-probability tickTemperature))[
+     set LARVA_DEATH_DENSITY_DEATH_PROBABILITY (larva-density-death-probability ((count aedesP with [life_stage = 1]) - 1) (count breedingZones))
+     act-dead
+  ]
+  ;Density dependent death probability
+  if((random-bool LARVA_DEATH_DENSITY_DEATH_PROBABILITY) and (LARVA_COMPETITION?))[
+     set LARVA_DEATH_DENSITY_DEATH_PROBABILITY (larva-density-death-probability ((count aedesP with [life_stage = 1]) - 1) (count breedingZones))
+     act-dead
+  ]
+  update_metabolic_rate 1
+end
+to act-pupa
+  ;Mosquito actions while in pupa state**
+  ;Static death rates
+  if(random-bool (pupa-mortality-probability tickTemperature))[act-dead]
+  update_metabolic_rate 2
+end
+to act-adult
+   ;Mosquito actions while in adult state**
+   ;Static death rates
+   ;if(PREDATION?)[probabilistic-die-by-predation]
+   probabilistic-natural-death
+   act-hungry
+   ;Regular actions--------------------------------------------------------------------------------
+   ifelse(female? = false)
+   [
+      ;Male Actions-------------
+      ifelse(maleReproductiveDelay != 0)
+      [
+         ;Pre-reproductive
+         ifelse(hunger < MOSQUITO_FEEDING_THRESHOLD)[move-pseudo-random-walking ((item 3 movement_speeds) / 10) MOSQUITO_MOVEMENT_SPEED_DEVIATION][act-feed]
+         set maleReproductiveDelay (maleReproductiveDelay - 1)
+      ][
+         ;Reproductive
+         ifelse(hunger < MOSQUITO_FEEDING_THRESHOLD)[act-reproductive][act-feed]
+      ]  
+   ][  
+      ;Female Actions-------------
+      ifelse(hunger < MOSQUITO_FEEDING_THRESHOLD)[act-reproductive][act-feed]
+   ]
+end
+to act-adult-night
+  if(random-bool MOSQUITO_NIGHT_MOVEMENT_PROBABILITY)
+  [
+    move-pseudo-random-walking ((item 4 movement_speeds) / 10) MOSQUITO_MOVEMENT_SPEED_DEVIATION
+    if(hunger > MOSQUITO_FEEDING_THRESHOLD)[act-feed]
+  ]
+  act-hungry
+end  
+to probabilistic-natural-death
+  ifelse(wolbachia? = False)[
+      if(random-bool ((1 + FOGGING_KILL_PROBABILITY) * TICK_ADULT_DEATH_PROBABILITY))[act-dead]
+   ][
+      if(random-bool (1.5 * TICK_ADULT_DEATH_PROBABILITY))[act-dead]
+   ]
+end
+to probabilistic-die-by-starvation
+  ;Kills a mosquito probabilistically on accounts of environment carrying capacity (DEPRECIATED - NO BIOLOGICAL JUSTIFICATION)
+  if(random-float 1 < (DEATH_BY_STARVATION_PROBABILITY ^ (2 * POPULATION_CAP_THRESHOLD / count aedesp)))[act-dead]
+end
+to probabilistic-die-by-predation
+  ;Kills a mosquito probabilistically on accounts of density-dependent predaiton (DEPRECIATED - NO BIOLOGICAL JUSTIFICATION)
+  if(random-float 1 < (DEATH_BY_PREDATOR_PROBABILITY ^ (2 * POPULATION_CAP_THRESHOLD / (count aedesp with [life_stage = 3]))))[act-dead]
+end

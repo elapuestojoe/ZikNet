@@ -1,0 +1,117 @@
+;;***************************HEADERS************************************************************************************************************
+;act-human-day :: Encapsulates human daylight behaviour**
+;act-human-worker :: Human behaviour if person has to go to work in daytime
+;act-human-non-worker :: Human behaviour if person stays at home in daytime
+;act-human-night :: Human behaviour at night**
+;kill-mosquito-probabilistically :: If a mosquito is within killing range a human takes a probabilistic shot at killing it**
+;sickness-go-home-rest :: If a person is feeling sick a human returns home (requires humans class with "groupP" variable and houses with "group" variable)**
+;contact-human :: Determines if other humans are within contact radius for direct contact disease spread and adds them to the contacts list of the individual**
+;contact-house :: Determines a house is within contact radius for direct contact disease spread and adds it to the contacts list of the individual**
+;die-human :: Asks a human to die so that its contacts list is finalized**
+;exterminate-and-or-replace :: Breeding site replacement encapsulator
+;human-contact-human :: Human to human contact lower-end routines
+;human-contact-house :: Human to house contact lower-end routines 
+;human-contact-workZone :: HUman to work zone contact lower-end routines
+;;****************************BODY**************************************************************************************************************
+to act-human-day
+    ;kill-mosquito-probabilistically
+    ifelse(worker? = FALSE)[act-human-non-worker][act-human-worker]
+end
+to act-human-worker
+   ifelse(goWork? = TRUE)
+   [
+       ;;If it is time to go to work
+       move-probabilistically-towards (min-one-of workZones [distance myself]) HUMAN_MOVEMENT_SPEED HUMAN_MOVEMENT_FOCUS HUMAN_MOVEMENT_SPEED_DEVIATION
+       if(any? workZones in-radius HUMAN_HOUSE_CONTACT_RADIUS)[set goWork? FALSE]
+   ][
+       ;;If it is time to stay home
+   ]
+end
+to act-human-non-worker
+   ;;If the individual is not supposed to go to work but to wander around the house
+   if(random-bool HUMAN_VISITING_PROBABILITY)[
+       set visiting? true
+       let personGroup groupP
+       ifelse(GRAVITY_VISIT?)[
+         ;;Gravity model visit behaviour!!!!!
+         let housesGravityList ([gravity] of (one-of houses with [group = personGroup]))
+         set visitingHouseNumber ((weighted-random housesGravityList) + 1)
+       ][
+         ;;Random house visit behaviour!!!!!!
+         set visitingHouseNumber (random length groups - 1)
+       ]
+    ]
+    ifelse(visiting? = true and HUMAN_VISIT)
+    [
+        ifelse(visitingCooldown > 0)
+        [
+          set visitingCooldown (visitingCooldown - 1)
+          wander-towards-house visitingHouseNumber HUMAN_MOVEMENT_SPEED HUMAN_MOVEMENT_FOCUS HUMAN_MOVEMENT_SPEED_DEVIATION
+        ][
+          set visitingCooldown (random VISITING_COOLDOWN_MAX)
+          set visiting? false
+        ]
+    ][
+      ;wander-around-house groupP (HUMAN_MOVEMENT_SPEED / 4) HUMAN_MOVEMENT_FOCUS HUMAN_MOVEMENT_SPEED_DEVIATION;MODIFIED!!!!!!!!!!!!!!!!!!!!!!
+      exterminate-and-or-replace
+    ]      
+end
+to act-human-night
+  if((any? (houses with [group = group]) in-radius 2) = False)[wander-around-house groupP HUMAN_MOVEMENT_SPEED HUMAN_MOVEMENT_FOCUS HUMAN_MOVEMENT_SPEED_DEVIATION]
+  set goWork? True
+end
+to kill-mosquito-probabilistically
+  ;show "KILLEDBYHUMAN"
+  let aedes_in_range aedesp in-radius HUMAN_KILLING_RANGE
+  if(any? aedes_in_range)[if(random-bool DEATH_BY_HUMAN_PROBABILITY)[ask one-of aedes_in_range[act-dead]]];Death by human 
+end
+to sickness-goHome-rest [groupName speed probability]
+  let itsHouse (one-of houses with [group = groupName])
+  if(not (any? houses in-radius HUMAN_HOUSE_CONTACT_RADIUS with [group = groupName]))[move-probabilistically-towards itsHouse speed probability HUMAN_MOVEMENT_SPEED_DEVIATION]
+end
+to exterminate-and-or-replace
+   if(BREEDING_EXTERMINATION)[breeding-site-extermination]
+   if(BREEDING_REPLACEMENT_WOLBACHIA)[breeding-site-replacement "Wolbachia"]
+   if(BREEDING_REPLACEMENT_STERILE)[breeding-site-replacement "Sterile"]
+   if(BREEDING_REPLACEMENT_OXITECH)[breeding-site-replacement "Oxitech"]
+   ;if(BREEDING_REPLACEMENT_FITNESS)[breeding-site-replacement "Fitness"]  
+end
+;CONTACT HUMAN-----------------------------------------------
+to contact-human
+  if(HUMAN_CONTACT_REFRESH_BOOL)
+  [
+    let humans_in_radius (other humans in-radius HUMAN_CONTACT_RADIUS)
+    if(any? humans_in_radius)[human-contact-human humans_in_radius]
+  ]
+end
+to human-contact-human [humans_in_radius]
+  let names_list [name] of humans_in_radius
+  let contact_sentence (sentence (map [ x -> (word "{" x "," ticks "}")] names_list))
+  set contacts_list lput contact_sentence contacts_list
+end
+;CONTACT HOUSE----------------------------------------------
+to contact-house
+  if(HOUSE_CONTACT_REFRESH_BOOL)
+  [
+    let houses_in_radius (houses in-radius HUMAN_HOUSE_CONTACT_RADIUS)
+    let workZones_in_radius (workZones in-radius HUMAN_HOUSE_CONTACT_RADIUS)
+    if(any? houses_in_radius)[human-contact-house houses_in_radius]
+    if(any? workZones_in_radius)[human-contact-workZone workZones_in_radius]
+  ]
+end
+to human-contact-house [houses_in_radius]
+  let names_list_houses [name] of houses_in_radius
+  let contact_sentence_houses (sentence (map [x -> (word "{" x "," ticks "}")] names_list_houses))
+  set contacts_houses_list lput contact_sentence_houses contacts_houses_list  
+end
+to human-contact-workZone [workZones_in_radius]
+  let names_list_workZones [name] of workZones_in_radius
+  let contact_sentence_workZones (sentence (map [x -> (word "{" x "," ticks "}")] names_list_workZones))
+  set contacts_houses_list lput contact_sentence_workZones contacts_houses_list
+end
+;DIE HUMAN--------------------------------------------------
+to die-human
+  set GLOBAL_CONTACTS_LIST lput (word "{" contacts_list "}") GLOBAL_CONTACTS_LIST
+  set GLOBAL_CONTACTS_HOUSES_LIST lput (word "{" contacts_houses_list "}") GLOBAL_CONTACTS_HOUSES_LIST
+  die
+end

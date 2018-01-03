@@ -1,0 +1,66 @@
+;;***************************HEADERS************************************************************************************************************
+;evaluate-schoolfield-model-ratio :: Runs the Schoolfield equation as originally presented**
+;evaluate-schoolfield-constants :: Calculates Schoolfield metabolic constants that do not change throughout the simulation**
+;set-batch-evaluate-schoolfield-constants :: Evaluates parts of Schoolfields' equation that do not change over the course of the simulation**
+;evaluate-schoolfield-model-days-with-constants :: Evaluates a Schoolfield model given a set of metabolic constants**
+;calculate_phases_transitions_time_in_current_tick :: Runs the schoolfield model with a set of given metabolic constants**
+;calculate_phases_transition_ratio :: Runs the Schoolfield model given the current model's temperature so that the metabolic ratio to be added in every tick of the simulation is calculated**
+;;****************************BODY**************************************************************************************************************
+to-report evaluate-schoolfield-model-ratio [T R RdK Ha Hh T12]
+  let factorN1 ((T + 273.15) / 298)
+  let factorN2 (Ha / R)
+  let factorN3 (1 / 298)
+  let factorN4 (1 / (T + 273.15))
+  let factorD1 (Hh / R)
+  let factorD2 (1 / T12)
+  let numerator (factorN1 * e ^ (factorN2 * (factorN3 - factorN4)))
+  let denominator (1 + e ^ (factorD1 * (factorD2 - factorN4)))
+  report RdK * (numerator / denominator)
+end
+to-report evaluate-schoolfield-constants [R RdK Ha Hh T12]
+  let K1 (Ha / R)
+  let K2 (1 / 298)
+  let K3 (Hh / R)
+  let K4 (1 / T12)
+  let K5 RdK
+  report (list K1 K2 K3 K4 K5)
+end
+to set-batch-evaluate-schoolfield-constants
+  let eggSchoolK evaluate-schoolfield-constants (item 0 EGG_THERMODYNAMIC) (item 1 EGG_THERMODYNAMIC) (item 2 EGG_THERMODYNAMIC) (item 3 EGG_THERMODYNAMIC) (item 4 EGG_THERMODYNAMIC)
+  let larvaSchoolK evaluate-schoolfield-constants (item 0 LARVA_THERMODYNAMIC) (item 1 LARVA_THERMODYNAMIC) (item 2 LARVA_THERMODYNAMIC) (item 3 LARVA_THERMODYNAMIC) (item 4 LARVA_THERMODYNAMIC)
+  let pupaSchoolK evaluate-schoolfield-constants (item 0 PUPA_THERMODYNAMIC) (item 1 PUPA_THERMODYNAMIC) (item 2 PUPA_THERMODYNAMIC) (item 3 PUPA_THERMODYNAMIC) (item 4 PUPA_THERMODYNAMIC)
+  let gon1SchoolK evaluate-schoolfield-constants (item 0 GONOTROPICA1_THERMODYNAMIC) (item 1 GONOTROPICA1_THERMODYNAMIC) (item 2 GONOTROPICA1_THERMODYNAMIC) (item 3 GONOTROPICA1_THERMODYNAMIC) (item 4 GONOTROPICA1_THERMODYNAMIC)
+  let gon2SchoolK evaluate-schoolfield-constants (item 0 GONOTROPICA2_THERMODYNAMIC) (item 1 GONOTROPICA2_THERMODYNAMIC) (item 2 GONOTROPICA2_THERMODYNAMIC) (item 3 GONOTROPICA2_THERMODYNAMIC) (item 4 GONOTROPICA2_THERMODYNAMIC)
+  set SCHOOLFIELD_MODEL_CONSTANTS (list eggSchoolK larvaSchoolK pupaSchoolK gon1SchoolK gon2SchoolK)
+end
+to-report evaluate-schoolfield-model-ratio-with-constants [T constants]
+  let factorN1 ((T + 273.15) / 298)
+  let factorN2 (item 0 constants)
+  let factorN3 (item 1 constants)
+  let factorN4 (1 / (T + 273.15))
+  let factorD1 (item 2 constants)
+  let factorD2 (item 3 constants)
+  let factorN5 (item 4 constants)
+  let numerator (factorN1 * e ^ (factorN2 * (factorN3 - factorN4)))
+  let denominator (1 + e ^ (factorD1 * (factorD2 - factorN4)))
+  report factorN5 * (numerator / denominator)
+end
+to-report evaluate-schoolfield-model-days-with-constants [T constants]
+  report 1 / (evaluate-schoolfield-model-ratio-with-constants T constants)
+end
+to calculate_phases_transitions_time_in_current_tick
+  let tickEggPhaseAge convert_days_to_ticks (evaluate-schoolfield-model-days-with-constants tickTemperature (item 0 SCHOOLFIELD_MODEL_CONSTANTS))
+  let tickLarvaPhaseAge (convert_days_to_ticks (evaluate-schoolfield-model-days-with-constants tickTemperature (item 1 SCHOOLFIELD_MODEL_CONSTANTS)) + tickEggPhaseAge)
+  let tickPupaPhaseAge (convert_days_to_ticks (evaluate-schoolfield-model-days-with-constants tickTemperature (item 2 SCHOOLFIELD_MODEL_CONSTANTS)) + tickLarvaPhaseAge)
+  let tickGonotrophicA1PhaseAge (convert_days_to_ticks (evaluate-schoolfield-model-days-with-constants tickTemperature (item 3 SCHOOLFIELD_MODEL_CONSTANTS)) + tickPupaPhaseAge)
+  let tickGonotrophicA2PhaseAge (convert_days_to_ticks (evaluate-schoolfield-model-days-with-constants tickTemperature (item 4 SCHOOLFIELD_MODEL_CONSTANTS)) + tickGonotrophicA1PhaseAge)
+  set tickPhasesTransitionAges (list tickEggPhaseAge tickLarvaPhaseAge tickPupaPhaseAge tickGonotrophicA1PhaseAge tickGonotrophicA2PhaseAge)
+end
+to calculate_phases_transitions_ratio
+  let tickEggPhaseAge convert_ratio_days_to_ticks (evaluate-schoolfield-model-ratio-with-constants tickTemperature (item 0 SCHOOLFIELD_MODEL_CONSTANTS))
+  let tickLarvaPhaseAge convert_ratio_days_to_ticks (evaluate-schoolfield-model-ratio-with-constants tickTemperature (item 1 SCHOOLFIELD_MODEL_CONSTANTS))
+  let tickPupaPhaseAge convert_ratio_days_to_ticks (evaluate-schoolfield-model-ratio-with-constants tickTemperature (item 2 SCHOOLFIELD_MODEL_CONSTANTS))
+  let tickGonotrophicA1PhaseAge convert_ratio_days_to_ticks (evaluate-schoolfield-model-ratio-with-constants tickTemperature (item 3 SCHOOLFIELD_MODEL_CONSTANTS))
+  let tickGonotrophicA2PhaseAge convert_ratio_days_to_ticks (evaluate-schoolfield-model-ratio-with-constants tickTemperature (item 4 SCHOOLFIELD_MODEL_CONSTANTS))
+  set tickPhasesTransitionRates (list tickEggPhaseAge tickLarvaPhaseAge tickPupaPhaseAge tickGonotrophicA1PhaseAge tickGonotrophicA2PhaseAge)
+end

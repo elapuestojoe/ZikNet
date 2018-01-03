@@ -1,18 +1,22 @@
 import pandas as pd
 import os
-directory = os.fsencode("2017Data")
+directory = os.fsencode("MexicoData")
 
 casesPerCity = {}
 dates = []
+# fileNameString = "MexicoData"
 for file in sorted(os.listdir(directory)):
 	filename = os.fsdecode(file)
 
-	excel = pd.read_csv("2017Data/{}".format(filename), 
+	excel = pd.read_csv("MexicoData/{}".format(filename), 
 		usecols=["report_date", "location", "data_field", "value"])
 
 	weeklyConfirmed = excel.loc[excel["data_field"] == "weekly_zika_confirmed"]
 
 	weeklyConfirmed["location"].replace(to_replace=["Mexico-Mexico"],
+		value="Mexico-State_Of_Mexico",
+		inplace=True)
+	weeklyConfirmed["location"].replace(to_replace=["Mexico-State-Of-Mexico"],
 		value="Mexico-State_Of_Mexico",
 		inplace=True)
 	weeklyConfirmed["location"].replace(to_replace=["Mexico-Distrito_Federal"],
@@ -29,7 +33,7 @@ for file in sorted(os.listdir(directory)):
 		casesPerCity[row.location].append(row.value)
 	dates.append(date)
 
-file= open("2017Cases.csv", "w")
+file= open("MexicoCases.csv", "w")
 file.write("CITY,")
 file.write(",".join(dates))
 file.write("\n")

@@ -2,12 +2,13 @@ library(rpart)
 library(rattle)
 library(ISLR); library(ggplot2); library(caret)
 
+model <- VeracruzWeatherDataCopy
 inTrain <- createDataPartition(y=model$Casos, p=0.7, list=FALSE)
 trainingSet <- model[inTrain,]
 testingSet <- model[-inTrain,]
 
 
-rt <- rpart(Casos ~ Busquedas + Altura + Precipitacion + Temp, data=trainingSet)
+rt <- rpart(Casos ~ Busquedas+Precipitacion+avgTemp+precipProbability, data=trainingSet)
 
 #Visualizar arbol
 fancyRpartPlot(rt)

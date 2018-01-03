@@ -1,0 +1,141 @@
+;;***************************HEADERS************************************************************************************************************
+;release-control :: Program release control measures wrapper. Releases control mosquitos at 0,0 according to the measures' delays
+;release-control-mosquitos :: Human released control mosquitos wrapper (agent-called)
+;release-control-mosquitos-program:: Program released control mosquitos wrapper (observer-called)
+;release-sterile :: Sterile males release characteristics
+;release-oxitec :: RIDL males release characteristics
+;release-fitness :: Fitness-selected males release characteristics
+;release-wolbachia :: Wolbachia mixed release characteristics
+;release-neutral :: Normal mixed release characteristics
+;;****************************BODY**************************************************************************************************************
+;;WRAPPERS-----------------------------------------------------------------------------
+to release-control [releaseBool releaseDelay replaceQuantity replaceType]
+  ;;Wrapper Function
+  ;;Releases a set of replaceQuantity control mosquitos in a given position every replaceQuantity ticks
+  if(releaseBool and (ticks mod releaseDelay = 0))[
+    if(replaceType = "Wolbachia")[
+      release-control-mosquitos-program 0 0 replaceQuantity "Wolbachia"
+      if(STORE_CONTROL_RELEASES and WARMUP_COMPLETED?)[set CONTROL_RELEASES_LIST lput (word "{" ticks "," replaceQuantity ",ReleaseWolbachia}") CONTROL_RELEASES_LIST]
+    ]
+    if(replaceType = "Sterile")[
+      release-control-mosquitos-program 0 0 replaceQuantity "Sterile"
+      if(STORE_CONTROL_RELEASES and WARMUP_COMPLETED?)[set CONTROL_RELEASES_LIST lput (word "{" ticks "," replaceQuantity ",ReleaseSterile}") CONTROL_RELEASES_LIST]
+    ]
+    if(replaceType = "Oxitech")[
+      release-control-mosquitos-program 0 0 replaceQuantity "Oxitech"
+      if(STORE_CONTROL_RELEASES and WARMUP_COMPLETED?)[set CONTROL_RELEASES_LIST lput (word "{" ticks "," replaceQuantity ",ReleaseOxitec}") CONTROL_RELEASES_LIST]
+    ]
+    if(replaceType = "Fitness")[
+      release-control-mosquitos-program 0 0 replaceQuantity "Fitness"
+      if(STORE_CONTROL_RELEASES and WARMUP_COMPLETED?)[set CONTROL_RELEASES_LIST lput (word "{" ticks "," replaceQuantity ",ReleaseFitness}") CONTROL_RELEASES_LIST]
+    ]
+    if(replaceType = "Neutral")[
+      release-control-mosquitos-program 0 0 replaceQuantity "Neutral"
+      if(STORE_CONTROL_RELEASES and WARMUP_COMPLETED?)[set CONTROL_RELEASES_LIST lput (word "{" ticks "," replaceQuantity ",ReleaseNeutral}") CONTROL_RELEASES_LIST]
+    ]
+  ]
+end
+;;HUMANRELEASES-----------------------------------------------------------------------------
+to release-control-mosquitos [xcoord ycoord released-number control-type]
+  hatch-aedesp released-number
+  [
+    setxy xcoord ycoord
+    set life_stage 3
+    set fitness_selectedMate? false
+    set sterileMate? false
+    set oxitechMate? false
+    set wolbachiaMate? false
+    set ovipositionCounter 0
+    set laidEggs? false
+    set metabolic_rate random-float 1
+    set mated? false
+    set age 0;;CAREFUL ON STATISTICS
+    set maleReproductiveDelay floor (convert_days_to_ticks (random-normal 1.5 .5))
+    set life_stage_ticks 0
+    set life_stage_ticks_list (list )    
+    set size MOSQUITO_SIZE
+    set bitten_list (list (word "{" who "}"))
+    set feeding_cooldown floor (random-normal BLOODFEED_COOLDOWN .1)
+    set movement_speeds create_movement_speeds
+    set transition_ages create_transition_ages
+    if(control-type = "Wolbachia")[release-wolbachia]
+    if(control-type = "Sterile")[release-sterile]
+    if(control-type = "Oxitech")[release-oxitec]
+    if(control-type = "Fitness")[release-fitness]
+    if(control-type = "Neutral")[release-neutral]
+  ]
+end
+to release-control-mosquitos-program [xcoord ycoord released-number control-type]
+  create-aedesp released-number
+  [
+    setxy 0 0
+    ;setRandomXY;setxy xcoord ycoord
+    set life_stage 3
+    set fitness_selectedMate? false
+    set sterileMate? false
+    set oxitechMate? false
+    set wolbachiaMate? false
+    set ovipositionCounter 0
+    set laidEggs? false
+    set metabolic_rate random-float 1
+    set mated? false
+    set age 0;;CAREFUL ON STATISTICS
+    set maleReproductiveDelay floor (convert_days_to_ticks (random-normal 1.5 .5))
+    set life_stage_ticks 0
+    set life_stage_ticks_list (list )    
+    set size MOSQUITO_SIZE
+    set bitten_list (list (word "{" who "}"))
+    set feeding_cooldown floor (random-normal BLOODFEED_COOLDOWN .1)
+    set movement_speeds create_movement_speeds
+    set transition_ages create_transition_ages
+    if(control-type = "Wolbachia")[release-wolbachia]
+    if(control-type = "Sterile")[release-sterile]
+    if(control-type = "Oxitech")[release-oxitec]
+    if(control-type = "Fitness")[release-fitness]
+    if(control-type = "Neutral")[release-neutral]
+  ]    
+end
+;;RELEASE ROUTINES---------------------------------------
+to release-sterile
+  set fitness_selected? false
+  set female? false
+  set oxitech? false
+  set bloodfed? false
+  set sterile? true
+  set wolbachia? false   
+end
+to release-oxitec
+  set fitness_selected? false
+  set female? false
+  set oxitech? true
+  set bloodfed? false
+  set sterile? false
+  set wolbachia? false 
+  set ridl_gene 2
+end
+to release-fitness
+  set fitness_selected? true
+  set female? false
+  set oxitech? false
+  set bloodfed? false
+  set sterile? false
+  set wolbachia? false   
+end
+to release-wolbachia
+  set fitness_selected? false
+  set female? (random-bool .5)
+  set life_stage 3
+  set oxitech? false
+  set bloodfed? false
+  set sterile? false
+  set wolbachia? true  
+end
+to release-neutral
+  set fitness_selected? false
+  set female? (random-bool .5)
+  set life_stage 3
+  set oxitech? false
+  set bloodfed? false
+  set sterile? false
+  set wolbachia? false  
+end

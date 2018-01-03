@@ -1,0 +1,305 @@
+;;***************************HEADERS************************************************************************************************************
+;setup :: Main program routine
+;create-humans-houses-breeding-landmarks :: Create houses at the desired coordinates with given area, group and population values
+;setup-terrain :: Generates the terrain
+;create-workZones-population :: Generates the population of workzones
+;create-sugars-population :: Generates a population of sugar sources
+;create-sugarBaits-population :: Generates a population of sugar baits
+;reproduce :: Generates moquito offspring given reproductive characteristics
+;create-population :: Generates the mosquito initial population
+;create-house-at-coordinates :: Creates a house given a set of coordinates 
+;create-landmark-and-breeding-zone-around-coordinates :: Creates a pair of landmark and breeding zone around given coordinates (random normal)
+;create-humans-at-houses :: Creates a set of humans bound to a particular house
+;create-ovitraps-population :: Creates a population of ovitraps at random locations
+;create-ovitrap-around-coordinates :: Creates an ovitrap near a set of coordinates
+;;****************************BODY**************************************************************************************************************
+to-report reproduce_RIDL [parRIDLGeneA parRIDLGeneB]
+  let temp_ridl_gene -1
+  ;if(parRIDLGeneB = 1)[print "MATED Rr!!!!!!!"]
+  if((parRIDLGeneA = 2 and parRIDLGeneB = 2) or (parRIDLGeneA = 2 and parRIDLGeneB = 2))[set temp_ridl_gene 2]
+  if((parRIDLGeneA = 2 and parRIDLGeneB = 1) or (parRIDLGeneA = 1 and parRIDLGeneB = 2))[ifelse(random-bool .5)[set temp_ridl_gene 2][set temp_ridl_gene 1]]
+  if((parRIDLGeneA = 2 and parRIDLGeneB = 0) or (parRIDLGeneA = 0 and parRIDLGeneB = 2))[set temp_ridl_gene 1]
+  if((parRIDLGeneA = 1 and parRIDLGeneB = 1) or (parRIDLGeneA = 1 and parRIDLGeneB = 1))[ifelse(random-bool .5)[set temp_ridl_gene 1][ifelse(random-bool .5)[set temp_ridl_gene 2][set temp_ridl_gene 0]]]
+  if((parRIDLGeneA = 1 and parRIDLGeneB = 0) or (parRIDLGeneA = 0 and parRIDLGeneB = 1))[ifelse(random-bool .5)[set temp_ridl_gene 1][set temp_ridl_gene 0]]
+  if((parRIDLGeneA = 0 and parRIDLGeneB = 0) or (parRIDLGeneA = 0 and parRIDLGeneB = 0))[set temp_ridl_gene 0]
+  report temp_ridl_gene
+end
+to reproduce [offspring_number wolbachia_bool fitness_selected_bool oxitech_bool femaRIDLGene maleRIDLGene]
+  hatch-aedesp offspring_number
+  [
+    set age 0
+    set female? random-bool .4
+    set size MOSQUITO_SIZE
+    set wolbachia? wolbachia_bool
+    set fitness_selected? fitness_selected_bool
+    set fitness_selectedMate? false
+    set sterileMate? false
+    set wolbachiaMate? false
+    ;ifelse(wolbachia? = false)[set transition_ages create_transition_ages][set transition_ages create_transition_ages_wolbachia]
+    ;set transition_ages create_transition_ages
+    set mated? false
+    set bloodfed? false
+    set laidEggs? false
+    set ridl_gene reproduce_RIDL femaRIDLGene maleRIDLGene
+    if(ridl_gene != 0)[set oxitech? true];Female specificity
+    ;print (word "F=" femaRIDLGene " :: " "M=" maleRIDLGene " = " female? " : " ridl_gene)
+    set metabolic_rate 0
+    set life_stage 0
+    set transition_ages create_transition_ages
+    set maleReproductiveDelay floor (convert_days_to_ticks (random-normal 1.5 .5))
+    set bitten_list (list (word "{" who "}"))
+    set feeding_cooldown floor (random-normal BLOODFEED_COOLDOWN .1)
+    set ovipositionCounter 0
+    set life_stage_ticks 0 
+    set life_stage_ticks_list (list )
+    set hunger random 1
+    set transition_ages create_transition_ages
+    set oxitechMate? false
+  ]
+end
+to setup
+  clear-all
+  reset-ticks
+  set-global-variables
+  set LAST_FOGGING_TIME -1000
+  setup-terrain
+  set-batch-evaluate-schoolfield-constants
+  ;Import the sceario
+  if(BreedingZonesNumber = 10)[set-coordinates1]
+  if(BreedingZonesNumber = 15)[set-coordinates2]
+  if(BreedingZonesNumber = 20)[set-coordinates3]
+  if(BreedingZonesNumber = 25)[set-coordinates4]
+  if(BreedingZonesNumber = 30)[set-coordinates5]
+  if(BreedingZonesNumber = "GoogleMap")[set-coordinates]
+  ;Imports the scenario----------------
+  create-workZones-population
+  create-humans-houses-breeding-landmarks
+  set-initial-population
+  create-sugars-population
+  if(SUGAR_BAITS?)[create-sugarBaits-population]
+  if(OVITRAPS?)[create-ovitraps-population]
+  create-population
+end
+to create-humans-houses-breeding-landmarks
+  let house_name_counter 0
+  set human_name_counter 0
+  (foreach xcord ycord areas groups individuals[
+    create-house-at-coordinates (?1) (?2) (?3) (?4) (?5) (item house_name_counter names_houses)
+    set house_name_counter (house_name_counter + 1)
+    create-landmark-and-breeding-zone-around-coordinates (?1) (?2)
+    create-humans-at-houses (?4) (?5)
+    if(OVITRAPS?)[create-ovitrap-around-coordinates (?1) (?2)]
+    let counter 0
+    while[counter < 5][
+        create-sugars-around-coordinates ?1 ?2
+        set counter (counter + 1)
+    ]
+  ])
+end
+to setup-terrain
+  ask patches[
+    ifelse(road = 1)
+    [set pcolor (35 - random 2)][set pcolor (65 + random 3)]
+  ]
+end
+to create-ovitraps-population
+    create-ovitraps (round (.5 * (count houses)))[
+      setRandomXY
+      set size 4
+      set color red
+      set shape "circle"
+    ]  
+end
+to create-ovitrap-around-coordinates [xcoord ycoord]
+  let xbreeding (random-normal xcoord 5)
+  let ybreeding (random-normal ycoord 5)
+  create-ovitraps 1
+  [
+    setxy (random-normal xbreeding 1) (random-normal ybreeding 1)
+    set size 4
+    set color red
+    set shape "circle"
+  ]
+end
+to create-workZones-population
+  let wCounter 0
+  (foreach wxcord wycord[
+    create-workZones 1[
+      ;setxy random max-pxcor random max-pycor
+      setxy ?1 ?2
+      set size 12
+      set color orange
+      set shape "house"
+      set name wCounter
+      set wCounter (wCounter + 1)
+    ]
+  ])
+end
+to create-sugars-population
+    create-sugars (5 * (count houses))[
+      setRandomXY
+      set size 2
+      set color black
+      set shape "plant"
+      set food FOOD_AMOUNT_PER_SOURCE
+    ]
+end
+to create-sugars-around-coordinates [xcoord ycoord]
+    create-sugars 1
+    [
+        ;ifelse(random-bool .5)[set xcoord (xcoord + random-float 5)][set ycoord (ycoord + random-float 5)]
+        set xcoord (random-normal xcoord 5)
+        set ycoord (random-normal ycoord 5)
+        if(xcoord >= max-pxcor)[set xcoord (max-pxcor - random-float 5)]
+        if(ycoord >= max-pycor)[set xcoord (max-pxcor - random-float 5)]
+        if(xcoord <= min-pxcor)[set xcoord (min-pxcor + random-float 5)]
+        if(ycoord <= min-pycor)[set xcoord (min-pxcor + random-float 5)]
+        setxy xcoord ycoord
+        set size 2
+        set color black
+        set shape "plant"
+        set food FOOD_AMOUNT_PER_SOURCE
+    ]
+end
+to create-sugarBaits-population
+    create-sugarBaits (10 * (count houses))[
+      setRandomXY
+      set size 2
+      set color orange
+      set shape "flag"
+      set food 1
+    ]  
+end
+to create-population
+  create-aedesp INITIAL_POPULATION
+  [
+    ;CommonInit------------------------------
+    set size MOSQUITO_SIZE
+    while[(count (breedingZones in-radius 2) = 0)][setRandomXY]
+    set transition_ages create_transition_ages
+    set laidEggs? false
+    set metabolic_rate random-float 1
+    set hunger random 1
+    set bitten_list (list (word "{" who "}"))
+    set feeding_cooldown floor (random BLOODFEED_COOLDOWN);MODIFIED
+    set movement_speeds create_movement_speeds
+    set transition_ages create_transition_ages
+    set life_stage_ticks 3
+    set life_stage_ticks_list (list )
+    set maleReproductiveDelay floor (convert_days_to_ticks (random-normal 1.5 .5))
+    ;MateInit--------------------------------
+    set fitness_selectedMate? false
+    set sterileMate? false
+    set wolbachiaMate? false
+    set ovipositionCounter 0
+    set wolbachiaMate? false
+    ;Oxitech---------------------------------
+    set oxitechMate? false
+    set oxitech? random-bool OXITECH_RATIO
+    ifelse(oxitech?)
+    [
+      set female? false
+      set life_stage 3
+      set ridl_gene 2
+    ][
+      set female? (random-bool .5)
+      set ridl_gene 0
+    ]
+    ;Wolbachia--------------------------------
+    set wolbachia? random-bool WOLBACHIA_RATIO
+    ;FitnessSelected--------------------------
+    set fitness_selected? random-bool FITNESS_SELECTED_RATIO
+    ;Sterile------------------
+    ifelse(female? = true)[set sterile? false][set sterile? random-bool STERILE_RATIO]
+    ifelse(female?)[set color red][ifelse(sterile?)[set color yellow][set color black]] 
+    ;LifeStagesInit---------------------------
+    let lifeRand random 10
+    ;set life_stage (random-integer-between 1 4)
+    if(lifeRand > 0 and lifeRand <= 1)[set life_stage 0]
+    if(lifeRand > 1 and lifeRand <= 2)[set life_stage 1]
+    if(lifeRand > 2 and lifeRand <= 4)[set life_stage 2]
+    if(lifeRand > 4)[set life_stage 3]
+    if(life_stage = 0)[set age (random-integer-between (item 0 transition_ages) (item 1 transition_ages))]
+    if(life_stage = 1)[set age (random-integer-between (item 1 transition_ages) (item 2 transition_ages))]
+    if(life_stage = 2)[set age (random-integer-between (item 2 transition_ages) (item 3 transition_ages))]
+    if(life_stage = 3)[set age (random-integer-between (item 3 transition_ages) (item 6 transition_ages))]
+    ifelse(life_stage = 3 and female?)
+    [
+        set mated? (random-bool .5)
+        ifelse(mated?)[
+            set bloodfed? (random-bool .5)
+        ][
+            set bloodfed? false
+        ]
+    ][
+        set mated? false
+        set bloodfed? false
+    ]
+  ]
+end
+
+to create-house-at-coordinates [xcoord ycoord areaIn groupIn personsIn nameIn]
+  create-houses 1[
+    setxy xcoord ycoord
+    set area areaIn
+    set group groupIn
+    set persons personsIn
+    set size (floor (area / 100))
+    set color pink
+    set shape "house"
+    set size 1.2 * (floor (area / 100))
+    set name nameIn
+  ]
+end
+to create-landmark-and-breeding-zone-around-coordinates [xcoord ycoord]
+  let xbreeding 2 * max-pxcor
+  let ybreeding 2 * min-pxcor
+  while[(xbreeding >= max-pxcor - 5) or (ybreeding >= max-pycor - 5) or (xbreeding <= min-pxcor + 5) or (ybreeding <= min-pycor + 5)][  
+    set xbreeding (random-normal xcoord 2)
+    set ybreeding (random-normal ycoord 2)
+  ]
+  create-landmarks 1
+  [
+    setxy 0 0
+    set size HUMAN_SIZE
+    set color yellow
+    set shape "target"
+  ]
+  create-breedingZones 1
+  [
+    setxy 0 0
+    set size HUMAN_SIZE
+    set color blue
+    set shape "circle" 
+  ]
+end
+to create-humans-at-houses [groupIn individualsIn]
+    let counter 0
+    ;let name_counter 0
+    create-humans (individualsIn)[
+      set name (item human_name_counter names_listg)
+      set human_name_counter (human_name_counter + 1)
+      set visitingCooldown (random VISITING_COOLDOWN_MAX)
+      set contacted? false
+      set visiting? false
+      set contacted_house? false
+      set contacted_workZone? false
+      set replacementCooldown 0
+      set groupP groupIn
+      while[count houses in-radius 2 with[group = groupIn] = 0][setRandomXY]
+      set size HUMAN_SIZE
+      set shape "person"
+      set heading 90
+      set color red
+      set contacts_list (list (word "{" name "}"))
+      set contacts_houses_list (list (word "{" name "}"))
+      ifelse(counter < 2)[
+        set worker? TRUE
+      ][
+        set worker? FALSE
+      ]
+      set goWork? TRUE
+      set counter (counter + 1)
+      ;show (word worker? "     " name)
+    ]
+end

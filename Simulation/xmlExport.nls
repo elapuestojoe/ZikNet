@@ -1,0 +1,123 @@
+;;***************************HEADERS************************************************************************************************************
+;XML-write-parameters :: Creates the initial section of the XML that defines wether the variables are parameters or independent variables. This is only for reference and does not affect the simulation.
+;XML-write-tick-outputs :: Writes the required data for each tick of the simulation
+;XML-write-tail-outputs :: Writes the bites and contacts lists of the individuals to the file
+;Append_Final_Bites_Lists :: Asks the still living mosquitoes to die so that their bites lists are created
+;XML-setup-name :: Sets the file name according to the name, date, time and a random number to avoid collisions
+;XML-init-name :: Writes the initial part of the XML
+;XML-write-header :: Writes the header section of the XML (title, author, date and description). The written data is obtained from the BehaviorSpace "XML-write-header" part of the experiment
+;XML-write-entry :: ;XML entry creator function. Format is intended for indentation purposes. Entry-type defines the kind of entry (independent, parameter, output, etcetera). ID is the name of the variable. Value is the specific magnitude of the variable. 
+;XML-write-simple-entry :: Writes an entry without an ID parameter. Format is intended for indentation purposes. Entry-type defines the kind of entry (independent, parameter, output, etcetera). Value is the specific magnitude of the variable.
+;XML-finish-write :: Writes the final part of the XML
+;XML-init-write-ticks-body :: Write initial part of the middle section (ticks outputs) of the XML file
+;XML-finish-write-ticks-body :: Write final part of the middle section (ticks outputs) of the XML file
+;XML-init-write-tail-body :: Write initial part of the tail section (final outputs) of the XML file
+;XML-finish-write-tail-body :: Write final part of the tail section (final outputs) of the XML file
+;;****************************BODY**************************************************************************************************************
+;****Case-Specific****;
+to XML-write-parameters
+  file-open FILE_NAME
+    file-type (word "\t<parameters>\n")
+      ;XML-write-entry "\t\t" "parameter" "EggsLaid" EGGS_LAID
+      XML-write-entry "\t\t" "parameter" "SecondsPerTick" SECONDS_PER_TICK
+      XML-write-entry "\t\t" "parameter" "ScenarioNumber" scenario_number
+      ;XML-write-entry "\t\t" "parameter" "PopulationCapThreshold" POPULATION_CAP_THRESHOLD
+      ;XML-write-entry "\t\t" "parameter" "InitialPopulation" INITIAL_POPULATION      
+      XML-write-entry "\t\t" "parameter" "Temperature" CONSTANT_TEMPERATURE
+      XML-write-entry "\t\t" "parameter" "BreedingZonesNumber" BreedingZonesNumber
+      XML-write-entry "\t\t" "independent" "HUMAN_VISITING_PROBABILITY" HUMAN_VISITING_PROBABILITY
+    file-type (word "\t</parameters>\n")
+  file-close
+end
+to XML-write-tick-outputs [every-N-step]
+  if((ticks mod every-N-step) = 0 and WARMUP_COMPLETED?)[
+    file-open FILE_NAME
+      file-type (word "\t\t<tick id=" "\"" ticks "\"" ">\n")
+        XML-write-entry "\t\t\t" "output" "MosquitoPopulation" (count aedesp)
+        XML-write-entry "\t\t\t" "output" "EggsPopulation" (count aedesp with[life_stage = 0])
+        XML-write-entry "\t\t\t" "output" "LarvaPopulation" (count aedesp with[life_stage = 1])
+        XML-write-entry "\t\t\t" "output" "PupaPopulation" (count aedesp with[life_stage = 2])
+        XML-write-entry "\t\t\t" "output" "AdultPopulation" (count aedesp with[life_stage = 3])
+        XML-write-entry "\t\t\t" "output" "WolbachiaPopulation" (count aedesp with[wolbachia? = true and life_stage = 3])
+        XML-write-entry "\t\t\t" "output" "SterilePopulation" (count aedesp with[sterile? = true and life_stage = 3])
+        XML-write-entry "\t\t\t" "output" "FitnessPopulation" (count aedesp with[fitness_selected? = true and life_stage = 3])
+        XML-write-entry "\t\t\t" "output" "OxitecPopulation" (count aedesp with[oxitech? = true and life_stage = 3])
+        XML-write-entry "\t\t\t" "output" "EggDeathByInhibition" EGG_DEATH_BY_INHIBITION_PROBABILITY
+        XML-write-entry "\t\t\t" "output" "LarvaDeathByDensity" LARVA_DEATH_DENSITY_DEATH_PROBABILITY
+        XML-write-entry "\t\t\t" "output" "Temperature" tickTemperature
+        ;XML-write-entry "\t\t\t" "output" "Food" (sum [food] of sugars)
+        XML-write-entry "\t\t\t" "output" "MeanOvipositionCount" (mean ovipositions_count)
+        XML-write-entry "\t\t\t" "output" "MeanAdultLifespan" (mean adultAgesList)
+        XML-write-entry "\t\t\t" "output" "MeanLifespan" (mean mosquitoLifespan)
+        ;XML-write-entry "\t\t\t" "output" "FoodAvailable" (sum [food] of sugars)
+        ;XML-write-entry "\t\t\t" "output" "BreedingZones" (count breedingZones)
+        XML-write-entry "\t\t\t" "output" "FemalePopulation" (count aedesp with[female? = True and life_stage = 3])
+      file-type (word "\t\t</tick>\n")   
+    file-close
+  ]
+end
+to XML-write-tail-outputs
+  file-open FILE_NAME
+    XML-write-entry "\t\t" "output" "biteList" GLOBAL_BITES_LIST
+    XML-write-entry "\t\t" "output" "contactList" GLOBAL_CONTACTS_LIST
+    XML-write-entry "\t\t" "output" "contactHousesList" GLOBAL_CONTACTS_HOUSES_LIST
+    XML-write-entry "\t\t" "output" "controlReleasesList" CONTROL_RELEASES_LIST
+  file-close
+end
+
+to Append_Final_Bites_Lists
+  ask aedesP[act-dead]
+end
+
+;****Static****;
+to XML-setup-name [experiment_name]
+  let directory experiment_name
+  set FILE_NAME (word experiment_name (random 500000) ".xml");(word experiment_name date-and-time "-" (random 1000) ".xml")
+end
+to XML-init-write
+  if (file-exists? FILE_NAME) [carefully [file-delete FILE_NAME] [print error-message]]
+  file-open FILE_NAME
+    file-type ("<experiment>\n")
+  file-close
+end
+to XML-write-header [title author description]
+  file-open FILE_NAME
+    file-type (word "\t<header>\n")
+      XML-write-simple-entry "\t\t" "title" title
+      XML-write-simple-entry "\t\t" "author" author
+      XML-write-simple-entry "\t\t" "date" date-and-time
+      XML-write-simple-entry "\t\t" "description" description
+    file-type (word "\t</header>\n")
+  file-close
+end
+to XML-write-entry [format entry-type id value]
+  file-type (word format "<" entry-type " id=" "\"" id "\"" ">" value "</" entry-type ">\n")
+end
+to XML-write-simple-entry [format entry-type value]
+  file-type (word format "<" entry-type ">" value "</" entry-type ">\n")
+end
+to XML-finish-write
+  file-open FILE_NAME
+    file-type ("</experiment>")
+  file-close  
+end
+to XML-init-write-ticks-body
+  file-open FILE_NAME
+    file-type (word "\t<ticks_outputs>\n")
+  file-close
+end
+to XML-finish-write-ticks-body
+  file-open FILE_NAME  
+    file-type (word "\t</ticks_outputs>\n")
+  file-close
+end
+to XML-init-write-tail-body
+  file-open FILE_NAME
+    file-type (word "\t<final_outputs>\n")
+  file-close
+end
+to XML-finish-write-tail-body
+  file-open FILE_NAME
+    file-type (word "\t</final_outputs>\n")
+  file-close
+end

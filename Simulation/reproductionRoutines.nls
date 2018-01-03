@@ -1,0 +1,155 @@
+;;***************************HEADERS************************************************************************************************************
+;act-mate :: Mating subroutines**
+;mate-as-female ::
+;mate-as-male ::
+;reproduce-sterile ::
+;reproduce-wolbachia ::
+;reproduce-fitness ::
+;reproduce-normal ::
+;act-layEggs :: Female oviposition subroutines**
+;act-bloodfeed :: Female bloodfeed subroutines**
+;act-reproductive :: Mosquito actions while in adult reproductive state**
+;act-not-bloodfed-yet ::
+;act-bloodfed-yet ::
+;;****************************BODY**************************************************************************************************************
+;MATING ACTIONS---------------------------------------------------------------------------------------------------------------------------------
+to act-mate
+  ifelse(female? = true)
+  [mate-as-female]
+  [mate-as-male]
+end
+to mate-as-female
+  let close_reproductive_males ((aedesp in-radius ACTION_RADIUS) with [(female? = false) and (life_stage >= 3)])
+  move-probabilistically-towards (min-one-of landmarks [distance myself]) (item 4 movement_speeds) MOSQUITO_MOVEMENT_FOCUS MOSQUITO_MOVEMENT_SPEED_DEVIATION;Move towards closest landmark
+  if((any? close_reproductive_males) and (random-bool .05));[Check if there are no problems of several states being active at the same time???????????????????????????]
+  [
+    set mated? true
+    ifelse([sterile?] of (min-one-of close_reproductive_males [distance myself]))[set sterileMate? true][set sterileMate? false];Mated with sterile
+    ifelse([wolbachia?] of (min-one-of close_reproductive_males [distance myself]))[set wolbachiaMate? true][set wolbachiaMate? false];Mated with wolbachia
+    ifelse([fitness_selected?] of (min-one-of close_reproductive_males [distance myself]))[set fitness_selectedMate? true][set fitness_selectedMate? false];Mated with fitness selected
+    ifelse([oxitech?] of (min-one-of close_reproductive_males [distance myself]))[set oxitechMate? true][set oxitechMate? false];Mated with oxitec
+    set mate_ridl_gene ([ridl_gene] of (min-one-of close_reproductive_males [distance myself]))
+    ;print mate_ridl_gene
+  ]
+end
+to mate-as-male
+  let close_reproductive_females ((aedesp in-radius MOSQUITO_DETECTION_RADIUS) with [(female? = true) and (life_stage >= 3)])
+  ifelse(any? close_reproductive_females)
+  [move-probabilistically-towards (min-one-of close_reproductive_females [distance myself]) (item 4 movement_speeds) MOSQUITO_MOVEMENT_FOCUS MOSQUITO_MOVEMENT_SPEED_DEVIATION]
+  [move-probabilistically-towards (min-one-of landmarks [distance myself]) (item 4 movement_speeds) MOSQUITO_MOVEMENT_FOCUS MOSQUITO_MOVEMENT_SPEED_DEVIATION];Move towards closest landmark  
+end
+;EGG LAYING ACTIONS-----------------------------------------------------------------------------------------------------------------------------
+to act-layEggs
+  let case -1
+  let closest_breeding_zone (min-one-of breedingZones [distance myself])
+  let closest_ovitrap (min-one-of ovitraps [distance myself])
+  let closest_reproZone (min-one-of (turtle-set closest_breeding_zone closest_ovitrap) [distance myself])
+  move-probabilistically-towards closest_reproZone (item 4 movement_speeds) MOSQUITO_MOVEMENT_FOCUS MOSQUITO_MOVEMENT_SPEED_DEVIATION;Move towards closest breeding zone
+  if((distance closest_reproZone) < MOSQUITO_ACTION_RADIUS)
+  [
+      if(([breed] of closest_reproZone = ovitraps) and (random-bool DEATH_BY_OVITRAP_PROBABILITY))[act-dead];show "DEATH BY OVITRAP" act-dead]
+      ;;Case selector-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-
+      ifelse(sterileMate? = true)[set case 0][
+        ifelse((wolbachia? or wolbachiaMate?))[set case 1][
+          ifelse((oxitech? or oxitechMate?))[set case 2][
+            ifelse((fitness_selected? or fitness_selectedMate?))[set case 3][set case 4]
+          ]
+        ]
+      ]
+      ;;Reproduction routine-.-.-.-.-.-.-.-.-.-.-.-.
+      if(case = 0)[reproduce-sterile]
+      if(case = 1)[reproduce-wolbachia]
+      if(case = 2)[reproduce-ridl]
+      if(case = 3)[reproduce-fitness]
+      if(case = 4)[reproduce-normal]
+      ;;Finishing routines-.-.-.-.-.-.-.-.-.-.-.-.-.
+      set laidEggs? true
+      set ovipositionCounter (ovipositionCounter + 1);Female has laid eggs so set counter + 1 
+  ]
+end
+to reproduce-sterile
+    ;show "Reproduced Sterile"
+    reproduce 0 false false false ridl_gene mate_ridl_gene
+end
+to reproduce-wolbachia
+    ;show "Reproduced Wolbachia"
+    if((not wolbachia?) and (wolbachiaMate?))[reproduce 0 false false false ridl_gene mate_ridl_gene]
+    if((wolbachia?) and (not wolbachiaMate?))[reproduce (random-normal EGGS_LAID EGGS_LAID_DEVIATION) true false false ridl_gene mate_ridl_gene]
+    if((wolbachia?) and (wolbachiaMate?))[reproduce (random-normal EGGS_LAID EGGS_LAID_DEVIATION) true false false ridl_gene mate_ridl_gene]
+end
+to reproduce-ridl
+    ;show "Reproduced RIDL"
+    if((oxitech?) or (oxitechMate?))[reproduce (random-normal EGGS_LAID EGGS_LAID_DEVIATION) false false true ridl_gene mate_ridl_gene]  
+end
+to reproduce-fitness
+   ;show "Reproduced Fitness"
+end
+to reproduce-normal
+   ;show "Reproduced Normally"
+    reproduce (random-normal EGGS_LAID EGGS_LAID_DEVIATION) false false false ridl_gene mate_ridl_gene
+end
+;BLOOD-FEED ACTIONS-----------------------------------------------------------------------------------------------------------------------------
+to act-bloodfeed
+  let closest_human (min-one-of (humans in-radius MOSQUITO_DETECTION_RADIUS) [distance myself])
+  ifelse(closest_human != nobody)
+  [
+    move-probabilistically-towards closest_human (item 4 movement_speeds) MOSQUITO_MOVEMENT_FOCUS MOSQUITO_MOVEMENT_SPEED_DEVIATION;Move towards closest human
+    if (((distance closest_human) < MOSQUITO_ACTION_RADIUS) and (random-bool .75));If a human is within the action radius feed on him CHANGED!!!!!!!!!!!!!!!
+    [
+      ifelse(wolbachia? or fitness_selected?)
+      [
+        if(wolbachia?)[if(random-bool (1 - WOLBACHIA_EFFECTIVITY))[if(STORE_BITES and WARMUP_COMPLETED?)[set bitten_list lput (word "{" ([name] of closest_human) "," ticks "}") bitten_list]]]
+        if(fitness_selected?)[if(random-bool (1 - FITNESS_SELECTION_EFFECTIVITY))[if(STORE_BITES and WARMUP_COMPLETED?)[set bitten_list lput (word "{" ([name] of closest_human) "," ticks "}") bitten_list]]]
+      ][
+        if(STORE_BITES and WARMUP_COMPLETED?)[set bitten_list lput (word "{" ([name] of closest_human) "," ticks "}") bitten_list]
+      ]
+      set BITES_NUMBER (BITES_NUMBER + 1)
+      set gonotrophic_cooldown 0;floor (random-normal GONOTROPHICA1_TICKS_DURATION BLOODFEED_COOLDOWN_DISPERSION)
+      set bloodfed? true
+      set hunger 0
+    ]
+  ][
+     move-pseudo-random-walking ((item 3 movement_speeds) / 10) MOSQUITO_MOVEMENT_SPEED_DEVIATION
+  ]
+end
+;REPRODUCTIVE ACTIONS-----------------------------------------------------------------------------------------------------------------------------
+to act-reproductive
+  if((mated? = false) and (laidEggs? = false) and (bloodfed? = false))[act-mate]
+  if((female? = true) and (mated? = true))
+  [
+      ifelse(laidEggs? = false)
+      [
+          ifelse(bloodfed? = false)
+          [act-not-bloodfed-yet]
+          [act-bloodfed-yet]
+      ][
+          act-resetFemale
+      ]
+  ]
+end
+to act-not-bloodfed-yet
+   ;;Once a female has mated (one-time only event) check if feeding cooldown (set to around one day after laying eggs) has come to zero
+   ifelse(feeding_cooldown = 0)
+   [act-bloodfeed]
+   [
+       move-pseudo-random-walking ((item 4 movement_speeds) / 10) MOSQUITO_MOVEMENT_SPEED_DEVIATION
+       set feeding_cooldown (feeding_cooldown - 1)
+   ]  
+end
+to act-bloodfed-yet
+   ;;Once bloodmeal has taken place gonotrophic cooldown has to expire so that eggs can develop
+   ;print (word "GC: " gonotrophic_cooldown)
+   ifelse(gonotrophic_cooldown >= 1);(gonotrophic_cooldown >= 1)
+   [
+    ;print (word "LAID EGGS!!!!!!!!!!! " ovipositionCounter)
+    act-layEggs
+   ]
+   [
+       ;;If the gonotrophic cooldown is not zero (undeveloped eggs) wait
+       move-pseudo-random-walking ((item 4 movement_speeds) / 10) MOSQUITO_MOVEMENT_SPEED_DEVIATION
+       ;set gonotrophic_cooldown (gonotrophic_cooldown - 1)
+       ifelse(ovipositionCounter = 0)
+       [set gonotrophic_cooldown (gonotrophic_cooldown + (item 3 tickPhasesTransitionRates))]
+       [set gonotrophic_cooldown (gonotrophic_cooldown + (item 4 tickPhasesTransitionRates))]
+   ]  
+end

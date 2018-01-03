@@ -1,0 +1,121 @@
+;;***************************HEADERS************************************************************************************************************
+;random-bool :: Reports a random bool value by generating a random number from a uniform distribution and testing it against a probability threshold**
+;random-integer-between :: Reports a random number between two limits**
+;transition-age-variation :: Reports a truncated number that variates from a given input parameter with respect to a normal distribution and a given deviation parameter**DEPRECEATED??????
+;movement-speed-variation :: Reports a number that variates from a given input parameter with respect to a normal distribution and a given deviation parameter**
+;setRandomXY :: Sets the xy coordinates of a turtle to a random place**
+;evaluate-schoolfield-model-ratio :: Runs the Schoolfield equation as originally presented**
+;evaluate-schoolfield-constants :: Calculates Schoolfield metabolic constants that do not change throughout the simulation**
+;convert_ratio_days_to_ticks :: Transforms a ticks quantity into a days quantity**
+;convert_days_to_ticks :: Transforms a days quantity into a days quantity**
+;toggle_weekend :: Determines if any given day is a week day or weekend day**
+;toggle_day_night :: Determines if the hour of the day corresponds to daytime or night time**
+;update_days_number :: Calculates the number of days elapsed from the start of the simulation**
+;update_temperature :: Iterates over the values of DAILY_TEMPERATURES (that contains the information on the temperature behaviour through the day) and assigns the temperature to the environment. This function also calculates the metabolic ratios of development of the mosquitos.
+;update_contacts_bools :: Obtains a sample of the current contacts in the simulation according to the sampling rate and stores it
+;update-warmup :: Detects if the simulation's warmup period has been completed (transitory dynamics set in parameters export notebook)
+;update_max_eggs :: Updates the maximum number of eggs a female can lay to simulate density-dependant growth
+;update_metabolic_rate :: Performs the update of the metabolic development of a mosquito including the change of life stages**
+;;****************************BODY**************************************************************************************************************
+;;AUXILIARY FUNCTIONS------------------------------------------
+to-report random-bool [skew]
+  ifelse(random-float 1 > skew)[report false][report true]
+end
+to-report random-integer-between [minNumber maxNumber]
+  report (random (maxNumber - minNumber)) + minNumber
+end
+to-report transition-age-variation [transition-age deviation]
+  report abs (floor (random-normal transition-age deviation))
+end
+to-report movement-speed-variation [movement-speed deviation]
+  report abs (random-normal movement-speed deviation)
+end
+to setRandomXY
+  setxy (random-integer-between (- max-pxcor) max-pxcor) (random-integer-between (- max-pycor) max-pycor)
+end
+to-report convert_ratio_days_to_ticks [ratio]
+  report ratio * (1 / (24 * 60 * 60)) * (SECONDS_PER_TICK)
+end
+to-report convert_days_to_ticks [days]
+  report days * 24 * 60 * 60 * (1 / SECONDS_PER_TICK)
+end
+;;UPDATES---------------------------------------
+to toggle_weekend
+  ifelse(((floor NUMBER_OF_DAYS) mod 6 = 0) or ((floor NUMBER_OF_DAYS) mod 7 = 0))[set WEEKEND? True][set WEEKEND? False]
+end
+to toggle_day_night
+  if(ticks mod HALF_DAY = 0)[ifelse(WORKING_HOUR? = True)[set WORKING_HOUR? False][set WORKING_HOUR? True]];Toggle Day and Night
+end
+to update_days_number
+  set NUMBER_OF_DAYS (ticks / (HALF_DAY * 2))
+end
+to update_temperature
+  if(ticks mod TICK_TEMPERATURE_PHASES_REFRESH_RATE = 0)
+  [
+    ;ScriptedTemperatures-------------------
+    ;ifelse(DAILY_TEMPERATURE_ITERATOR < floor ((HALF_DAY / TICK_TEMPERATURE_PHASES_REFRESH_RATE) * 2))[set DAILY_TEMPERATURE_ITERATOR (DAILY_TEMPERATURE_ITERATOR + 1)][set DAILY_TEMPERATURE_ITERATOR 0]
+    ;set tickTemperature (random-normal (item DAILY_TEMPERATURE_ITERATOR DAILY_TEMPERATURES) DAILY_TEMPERATURE_DEVIATION)
+    ;;calculate_phases_transitions_time_in_current_tick
+    ;calculate_phases_transitions_ratio
+    ;ExperimentalTemperatures---------------
+    if(TEMPERATURE_TYPE = "DailyAndYearlyVariation")[set tickTemperature (temperature-climate-model (NUMBER_OF_DAYS))]; random-normal (temperature-climate-model (NUMBER_OF_DAYS)) DAILY_TEMPERATURE_DEVIATION]
+    if(TEMPERATURE_TYPE = "YearlyVariation")[set tickTemperature (temperature-avg-climate-model (NUMBER_OF_DAYS))]
+    if(TEMPERATURE_TYPE = "Constant")[set tickTemperature CONSTANT_TEMPERATURE]
+    calculate_phases_transitions_ratio    
+  ]
+end
+to update_contacts_bools
+  ifelse(ticks mod CONTACT_REFRESH_RATE = 0)[set HUMAN_CONTACT_REFRESH_BOOL true][set HUMAN_CONTACT_REFRESH_BOOL false]
+  ifelse(ticks mod HOUSE_CONTACT_REFRESH_RATE = 0)[set HOUSE_CONTACT_REFRESH_BOOL true][set HOUSE_CONTACT_REFRESH_BOOL false]
+end
+to update-warmup
+  if(ticks >= WARMUP_PERIOD)[set WARMUP_COMPLETED? true]
+end
+to update_max_eggs
+  ;(DEPRECIATED NO BIOLOGICAL BASIS)
+  ;ifelse((count aedesp) < POPULATION_CAP_THRESHOLD)[set POPULATION_MAX_EGGS EGGS_LAID][set POPULATION_MAX_EGGS POPULATION_CAP_PENALTY]
+  ;ifelse(DECREASE_FERTILITY?)[set POPULATION_MAX_EGGS ceiling ((EGGS_LAID - (EGGS_LAID / POPULATION_CAP_THRESHOLD) * (count aedesp)) + (EGGS_LAID / 2))][set POPULATION_MAX_EGGS EGGS_LAID];(floor EGGS_LAID / 10)]
+end
+to update_egg_inhibition_probability
+  set EGG_DEATH_BY_INHIBITION_PROBABILITY (larva-density-egg-hatching-inhibition (count aedesP with [life_stage = 1]) (count breedingZones))
+end
+to update_metabolic_rate [life_index]
+  set metabolic_rate (metabolic_rate + (random-normal (item life_index tickPhasesTransitionRates) 0))
+  ;Update the life stage when the metabolic rate is higher or equal to one
+  if(metabolic_rate >= 1)[
+    ;Regular actions------------------------------------------------
+    set life_stage (life_stage + 1)
+    set metabolic_rate 0
+    set life_stage_ticks_list (lput life_stage_ticks life_stage_ticks_list)
+    set life_stage_ticks 0
+    ;Transition actions---------------------------------------------
+    ;EGG to LARVA transition actions-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.
+    if(life_stage = 1)[]
+    ;LARVA to PUPA transition actions-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.
+    if(life_stage = 2)[]
+    ;PUPA to ADULT transition actions-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.
+    if(life_stage = 3)
+    [
+      ;Failed emergence
+      if(random-bool EMERGENCE_DEATH_PROBABILITY)[act-dead]
+      if(oxitech? and female? = true)[act-dead];Female specificity
+      ;if(oxitech?)[act-dead]
+      hatch ((EGG_SCALING_FACTOR - 1))
+    ]
+  ]  
+end
+to-report weighted-random [ weights ]
+  ifelse(is-list? weights)
+  [
+    let pick random-float sum weights
+    let total 0
+    let i 0
+    foreach weights [ x ->
+      set total total + x
+      if pick < total [ report i ]
+      set i i + 1
+    ]
+  ][
+    report 0
+  ]
+end

@@ -1,0 +1,41 @@
+;;***************************HEADERS************************************************************************************************************
+;create_transition_ages :: Generates transition ages for the mosquitos given a normal distribution SHOULD BE UNUSED
+;create_transition_ages_wolbachia :: Generates transition ages for the mosquitos infected with wolbachia given a normal distribution SHOULD BE UNUSED
+;create_movement_speeds :: Generates movement speeds given a random distribution 
+;;****************************BODY**************************************************************************************************************
+;;----------Transition Ages----------;;
+to-report create_transition_ages
+  report (
+            list 
+            transition-age-variation (item 0 TRANSITION_AGES_GLOBAL) 0;EggInit
+            transition-age-variation (item 1 TRANSITION_AGES_GLOBAL) AGE_DEVIATION;EggEnd-LarvaInit
+            transition-age-variation (item 2 TRANSITION_AGES_GLOBAL) AGE_DEVIATION;LarvaEnd-PupaInit
+            transition-age-variation (item 3 TRANSITION_AGES_GLOBAL) AGE_DEVIATION;PupaEnd-AdultInit
+            transition-age-variation (item 4 TRANSITION_AGES_GLOBAL) AGE_DEVIATION;GA1
+            transition-age-variation (item 5 TRANSITION_AGES_GLOBAL) AGE_DEVIATION;GA2
+            transition-age-variation (item 6 TRANSITION_AGES_GLOBAL) AGE_DEVIATION;Death
+         )
+end
+to-report create_transition_ages_wolbachia
+  report (
+            list 
+            transition-age-variation (item 0 TRANSITION_AGES_GLOBAL) 0
+            transition-age-variation (item 1 TRANSITION_AGES_GLOBAL) AGE_DEVIATION
+            transition-age-variation (item 2 TRANSITION_AGES_GLOBAL) AGE_DEVIATION
+            floor ((item 3 TRANSITION_AGES_GLOBAL) / 2)
+            floor ((item 4 TRANSITION_AGES_GLOBAL) / 2)
+            floor ((item 5 TRANSITION_AGES_GLOBAL) / 2)
+            floor ((item 6 TRANSITION_AGES_GLOBAL) / 2)
+         )
+end
+to-report create_movement_speeds
+  report (
+            list 
+            movement-speed-variation (item 0 MOSQUITO_SPEEDS_GLOBAL) 0
+            movement-speed-variation (item 1 MOSQUITO_SPEEDS_GLOBAL) SPEED_DEVIATION
+            movement-speed-variation (item 2 MOSQUITO_SPEEDS_GLOBAL) SPEED_DEVIATION
+            movement-speed-variation (item 3 MOSQUITO_SPEEDS_GLOBAL) SPEED_DEVIATION
+            movement-speed-variation (item 4 MOSQUITO_SPEEDS_GLOBAL) SPEED_DEVIATION
+            movement-speed-variation (item 5 MOSQUITO_SPEEDS_GLOBAL) SPEED_DEVIATION
+         )
+end

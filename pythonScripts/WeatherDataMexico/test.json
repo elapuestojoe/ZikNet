@@ -1,0 +1,65 @@
+{
+	"latitude": 19.2602,
+	"longitude": -96.5783,
+	"timezone": "America/Mexico_City",
+	"daily": {
+		"data": [
+			{
+				"time": 1451714400,
+				"summary": "Clear throughout the day.",
+				"icon": "clear-day",
+				"sunriseTime": 1451739687,
+				"sunsetTime": 1451779270,
+				"moonPhase": 0.77,
+				"precipIntensity": 0.0406,
+				"precipIntensityMax": 0.6756,
+				"precipIntensityMaxTime": 1451779200,
+				"precipProbability": 0.17,
+				"precipType": "rain",
+				"temperatureHigh": 21.51,
+				"temperatureHighTime": 1451761200,
+				"temperatureLow": 17.22,
+				"temperatureLowTime": 1451800800,
+				"apparentTemperatureHigh": 21.64,
+				"apparentTemperatureHighTime": 1451761200,
+				"apparentTemperatureLow": 17.26,
+				"apparentTemperatureLowTime": 1451800800,
+				"dewPoint": 16.28,
+				"humidity": 0.82,
+				"pressure": 1019.22,
+				"windSpeed": 6.1,
+				"windBearing": 354,
+				"cloudCover": 0.34,
+				"visibility": 9.99,
+				"temperatureMin": 17.41,
+				"temperatureMinTime": 1451790000,
+				"temperatureMax": 21.67,
+				"temperatureMaxTime": 1451721600,
+				"apparentTemperatureMin": 17.44,
+				"apparentTemperatureMinTime": 1451790000,
+				"apparentTemperatureMax": 22.01,
+				"apparentTemperatureMaxTime": 1451721600
+			}
+		]
+	},
+	"flags": {
+		"sources": [
+			"isd"
+		],
+		"isd-stations": [
+			"766127-99999",
+			"766830-99999",
+			"766850-99999",
+			"766870-99999",
+			"766913-99999",
+			"766920-99999",
+			"767370-99999",
+			"767380-99999",
+			"998433-99999",
+			"998434-99999",
+			"998437-99999"
+		],
+		"units": "si"
+	},
+	"offset": -6
+}

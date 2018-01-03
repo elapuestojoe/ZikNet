@@ -1,12 +1,13 @@
 from pytrends.request import TrendReq
 from epiweeks import getEpidemiologicalWeeks,getYMD,getNextWeek
+import datetime
 # Login to Google. Only need to run this once, the rest of requests will use the same session.
 pytrend = TrendReq()
 
 # Create payload and capture API tokens. Only needed for interest_over_time(), interest_by_region() & related_queries()
 # pytrend.build_payload(kw_list=['zika'], geo="MX", timeframe="2017-11-1 2017-11-9")
 
-file = open("2017Searches.csv", "w")
+file = open("2015-2017BrasilSearches.csv", "w")
 
 
 weeks = getEpidemiologicalWeeks(2017)
@@ -20,11 +21,11 @@ for i in range(len(weeks)):
 	year = week.year
 	month = week.month
 	day = week.day
-	print("{}-{}-{} -> {}-{}-{}".format(year,month,day,nextWeek.year,nextWeek.month,nextWeek.day))
-	timeframe = "{}-{}-{} {}-{}-{}".format(year,month,day,nextWeek.year,nextWeek.month,nextWeek.day)
-	pytrend.build_payload(kw_list=['zika'], geo="MX", timeframe=timeframe)
+	nextWeekC = nextWeek - datetime.timedelta(days=1)
+	timeframe = "{}-{}-{} {}-{}-{}".format(year,month,day,nextWeekC.year,nextWeekC.month,nextWeekC.day)
+	print("{}-{}-{} -> {}-{}-{}".format(year,month,day,nextWeekC.year,nextWeekC.month,nextWeekC.day))
+	pytrend.build_payload(kw_list=['zika'], geo="BR", timeframe=timeframe)
 	results = pytrend.interest_by_region(resolution="CITY")
-	print(results)
 	# if a city's search index is 0 it doesn't appear on results, so we have to keep track of it
 	tempWeekArray = {}
 	for index, row in results.iterrows():

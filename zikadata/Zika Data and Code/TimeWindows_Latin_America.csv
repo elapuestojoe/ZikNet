@@ -1,0 +1,27 @@
+country,file,T.start,T.end
+Argentina,Argentina.csv,19,36
+Barbados,Barbados.csv,16,23
+Bolivia,Bolivia.csv,15,34
+Brazil,Brazil.csv,1,72
+Colombia,Colombia.csv,1,36
+Costa Rica,CostaRica.csv,22,35
+Dominica,Dominica.csv,25,33
+Dominican Republic,DominRep.csv,16,32
+Ecuador,Ecuador.csv,16,34
+El Salvador,ElSalvador.csv,9,34
+French Guiana,FrenchGuiana.csv,16,35
+Guadalupe,Guadalupe.csv,18,35
+Guatemala,Guatemala.csv,9,24
+Haiti,Haiti.csv,18,25
+Honduras,Honduras.csv,16,35
+Martinique,Martinique.csv,15,35
+Jamaica,Jamaica.csv,12,36
+Mexico,Mexico.csv,15,35
+Nicaragua,Nicaragua.csv,19,35
+Panama,Panama.csv,10,35
+Puerto Rico,PuertoRico.csv,18,34
+St Martin,StMartin.csv,18,35
+Suriname,Suriname.csv,1,35
+Trinidad Tobago,TrinTob.csv,22,30
+Virgin Islands,VirginIs.csv,22,35
+Venezuela,Venezuela.csv,16,28

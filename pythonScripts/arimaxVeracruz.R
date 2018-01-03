@@ -1,6 +1,7 @@
 library(readr)
 library(ggplot2)
-veracruz <- read_csv("E:/ZikNet/pythonScripts/veracruzModel.csv")
+#veracruz <- read_csv("E:/ZikNet/pythonScripts/veracruzModel.csv")
+veracruz <- VeracruzWeatherDataCopy
 View(veracruz)
 
 ####################
@@ -11,7 +12,8 @@ View(veracruz)
 require(ggplot2)
 require(gridExtra)
 
-df <- read_csv("E:/ZikNet/pythonScripts/veracruzModel.csv")
+#df <- read_csv("E:/ZikNet/pythonScripts/veracruzModel.csv")
+df <- veracruz
 p1 <- ggplot(df, aes(x = X, y = Busquedas)) +
   ylab("Busquedas") +
   xlab("") +
@@ -24,8 +26,8 @@ p2 <- ggplot(df, aes(x = X, y = Precipitacion)) +
   geom_line() +
   expand_limits(x = 0, y = 0)
 
-p3 <- ggplot(df, aes(x = X, y = Temp)) +
-  ylab("Temp") +
+p3 <- ggplot(df, aes(x = X, y = precipProbability)) +
+  ylab("precipProbability") +
   xlab("Period") +
   geom_line() +
   expand_limits(x = 0, y = 0)
@@ -64,7 +66,7 @@ accuracy(fit_cons)
 ####################
 require(forecast)
 fit_cons_busquedas <- auto.arima(df$Casos, xreg = df$Busquedas)
-fcast_busquedas <- c(27, 27) #Busquedas siguientes
+fcast_busquedas <- c(9, 12) #Busquedas siguientes
 fcast_cons_busquedas <- forecast(fit_cons_busquedas, xreg = fcast_busquedas, h = 2)
 autoplot(fcast_cons_busquedas)
 

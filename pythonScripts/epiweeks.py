@@ -27,7 +27,11 @@ def getEpidemiologicalWeeks(year):
 	start = getFirstSundayEpiWeek(year)
 	nextWeek = getNextWeek(start)
 	weeks = [start]
-	for i in range(51):
+	end = input("Enter last day of epidemiological year in DD-MM-YYYY format: ")
+	end = [int(i) for i in end.split("-")]
+	end = datetime.datetime(end[2], end[1], end[0])
+	while nextWeek <= end:
+	# for i in range(51):
 		if(nextWeek < datetime.datetime.today()):
 			weeks.append(nextWeek)
 			nextWeek = getNextWeek(nextWeek)	

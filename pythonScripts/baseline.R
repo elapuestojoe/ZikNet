@@ -1,4 +1,5 @@
-model <- model2Years
+library(caret)
+model <- VeracruzWeatherDataCopy
 inTrain <- createDataPartition(y=model$Casos, p=0.7, list=FALSE)
 trainingSet <- model[inTrain,]
 testingSet <- model[-inTrain,]

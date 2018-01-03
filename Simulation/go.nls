@@ -1,0 +1,84 @@
+;;***************************HEADERS************************************************************************************************************
+;go :: Main program routine
+;act-aedesp :: Aedes population routines
+;act-humanp :: Human population routines
+;act-breedingZonesp :: Breeding zones routines
+;act-sugarsp :: Sugar sources routines
+;release-mosquitoesControl :: Mosquito control measures releases
+;;****************************BODY**************************************************************************************************************
+to go
+  update_days_number;Calculates the number of days elapsed just for counting purposes
+  update_temperature;Updates the environment temperature and calculates the metabolic ratios of development
+  ;toggle_weekend;Detects if a given day falls in weekend CURRENTLY UNUSED
+  toggle_day_night;Detects if a given time period corresponds to day or night for behaviour purposes
+  update_contacts_bools;Obtains a sample of the current contacts in the simulation according to the sampling rate and stores it
+  ;update_max_eggs;Calculates the max number of eggs a female can lay according to density-dependent rules of behaviour
+  update-warmup;Detects if the simulation's warmup period has been completed
+  update-larva-density-death-probability
+  update_egg_inhibition_probability
+  ;Agents Actions-------------------------------------------------------------------------------------------------------------------------------
+  act-aedesp
+  act-humanp
+  act-breedingZonesp
+  act-sugarsp
+  ;;RELEASECONTROLMOSQUITOES--------------------------------------------------------------------------------------------------------------------
+  release-mosquitoesControl
+  update-fogging-parameters
+  tick
+end
+;;Agents Routines.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.
+to act-aedesp
+ ask aedesp
+  [
+    ;Day and night activities
+    ifelse(WORKING_HOUR?)
+    [
+      act-mosquito-day
+    ][
+      ifelse(random-bool .2)
+      [act-mosquito-day]
+      [act-mosquito-night]
+    ]
+    ;Death by natural processes routines
+    if((item 6 transition_ages) < age)[act-dead]
+    ;Death by age probability routines [WHY IS THIS COMMENTED???????????????????????????????????????]
+    ;ifelse(wolbachia? = false)
+    ;[if(random-bool (mortality-probability age))[act-dead]]
+    ;[if(random-bool (wolbachia-mortality-probability age))[act-dead]]
+    ;Aging routines
+    set age (age + 1)
+    set life_stage_ticks (life_stage_ticks + 1)
+  ]  
+end
+to act-humanp 
+  ask humans[
+    ;Human daily actions
+    ifelse(WORKING_HOUR?)[act-human-day][act-human-night]
+    ;Information storage actions
+    if(WARMUP_COMPLETED?)[
+      if(STORE_HUMAN_CONTACT)[contact-human] 
+      if(STORE_HOUSE_CONTACT)[contact-house]
+    ]
+  ]
+end
+to act-breedingZonesp
+  ask breedingZones[
+  ]  
+end
+to act-sugarsp
+  ask sugars
+  [
+    if(FOOD_DYNAMICS?)[if(food <= FOOD_AMOUNT_PER_SOURCE)[set food (food + SOURCE_INCREASE_RATE)]]
+  ]
+end
+to release-mosquitoesControl
+  if(WARMUP_COMPLETED?);Wait until stabilization period has been met
+  [
+    if(ticks < WOLBACHIA_RELEASE_STOP)[release-control RELEASE_WOLBACHIA WOLBACHIA_RELEASE_DELAY WOLBACHIA_REPLACE_QUANTITY "Wolbachia"]
+    if(ticks < STERILE_RELEASE_STOP)[release-control RELEASE_STERILE STERILE_RELEASE_DELAY STERILE_REPLACE_QUANTITY "Sterile"]
+    if(ticks < OXITECH_RELEASE_STOP)[release-control RELEASE_OXITECH OXITECH_RELEASE_DELAY OXITECH_REPLACE_QUANTITY "Oxitech"]
+    ;if(ticks < FITNESS_RELEASE_STOP)[release-control RELEASE_FITNESS FITNESS_RELEASE_DELAY FITNESS_REPLACE_QUANTITY "Fitness"]
+    if(ticks < NEUTRAL_RELEASE_STOP)[release-control RELEASE_NEUTRAL NEUTRAL_RELEASE_DELAY NEUTRAL_REPLACE_QUANTITY "Neutral"]
+    if(ticks < FOGGING_RELEASE_STOP)[fogging-refill RELEASE_FOGGING FOGGING_RELEASE_DELAY]
+  ]
+end

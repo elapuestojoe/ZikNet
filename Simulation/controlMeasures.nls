@@ -1,0 +1,89 @@
+;;***************************HEADERS************************************************************************************************************
+;breeding-site-extermination :: Controls if a breeding site is subject to extermination of population (because of its population size) via fumigation or breeding site destruction
+;kill-breeding-site :: Destroys all the mosquitos in acuatic stages in a radius of the breeding site
+;fumigate :: Destroys all mosquitos in a radius of the breeding site
+;replace-breeding-site :: Performs a breeding site population replacement in the closest breeding site
+;breeding-site-replacement :: Replacement routine wrapper (can be called directly)
+;update-fogging-parameters :: 
+;;****************************BODY**************************************************************************************************************
+to breeding-site-extermination
+  if(random-bool (extermination-probability (count aedesp in-radius HUMAN_ACTION_RADIUS)))[set BREEDING_DESTROY? true]
+  if(BREEDING_DESTROY?)[
+    if((random-bool EXTERMINATION_FUMIGATION_RATIO) and BREEDING_EXTERMINATION)
+    [
+      kill-breeding-site
+      if(STORE_CONTROL_RELEASES and WARMUP_COMPLETED?)[set CONTROL_RELEASES_LIST lput (word "{" ticks "," "0" ",BreedingExtermination}") CONTROL_RELEASES_LIST]
+    ]
+    if((random-bool EXTERMINATION_FUMIGATION_RATIO) and FUMIGATION)
+    [
+      fumigate
+      if(STORE_CONTROL_RELEASES and WARMUP_COMPLETED?)[set CONTROL_RELEASES_LIST lput (word "{" ticks "," "0" ",BreedingFumigation}") CONTROL_RELEASES_LIST]
+    ]
+  ]  
+end
+to kill-breeding-site
+  let closestBreeding (min-one-of breedingZones [distance myself])
+  move-probabilistically-towards closestBreeding HUMAN_MOVEMENT_SPEED HUMAN_MOVEMENT_FOCUS HUMAN_MOVEMENT_SPEED_DEVIATION
+  if((distance closestBreeding) < ACTION_RADIUS)
+  [
+    ask closestBreeding
+    [
+      let aedesNearBreeding (aedesp in-radius ACTION_RADIUS)
+      ask aedesNearBreeding with [life_stage < 3][die]
+      set BREEDING_DESTROY? false
+      show "KILLED BREEDING SITE"
+    ]
+  ]
+end
+to fumigate
+  let closestBreeding (min-one-of breedingZones [distance myself])
+  move-probabilistically-towards closestBreeding HUMAN_MOVEMENT_SPEED HUMAN_MOVEMENT_FOCUS HUMAN_MOVEMENT_SPEED_DEVIATION
+  if((distance closestBreeding) < ACTION_RADIUS)
+  [
+    ask closestBreeding
+    [
+      let aedesNearBreeding (aedesp in-radius ACTION_RADIUS)
+      ask aedesNearBreeding [die]
+      set BREEDING_DESTROY? false
+      show "FUMIGATED"
+    ]
+  ]  
+end
+to replace-breeding-site [controlType]
+  let closestBreeding (min-one-of breedingZones [distance myself])
+  move-probabilistically-towards closestBreeding HUMAN_MOVEMENT_SPEED HUMAN_MOVEMENT_FOCUS HUMAN_MOVEMENT_SPEED_DEVIATION
+  if((distance closestBreeding) < ACTION_RADIUS)
+  [
+    ask closestBreeding
+    [
+      let aedesNearBreeding (aedesp in-radius ACTION_RADIUS)
+      ask aedesNearBreeding [die]
+      set BREEDING_DESTROY? false
+      if(STORE_CONTROL_RELEASES and WARMUP_COMPLETED?)[set CONTROL_RELEASES_LIST lput (word "{" ticks "," WOLBACHIA_REPLACE_QUANTITY ",BreedingReplacementWolbachia}") CONTROL_RELEASES_LIST]
+    ]
+    if(controlType = "Wolbachia")[release-control-mosquitos xcor ycor WOLBACHIA_REPLACE_QUANTITY controlType]
+    if(controlType = "Sterile")[release-control-mosquitos xcor ycor STERILE_REPLACE_QUANTITY controlType]
+    if(controlType = "Oxitech")[release-control-mosquitos xcor ycor OXITECH_REPLACE_QUANTITY controlType]
+    if(controlType = "Fitness")[release-control-mosquitos xcor ycor FITNESS_REPLACE_QUANTITY controlType]
+    set replacementCooldown REPLACEMENT_COOLDOWN
+  ]  
+end
+to breeding-site-replacement [controlType]
+  ifelse(replacementCooldown > 0)
+  [
+    set replacementCooldown (replacementCooldown - 1)
+  ][  
+    if(random-bool (extermination-probability (count aedesp in-radius HUMAN_ACTION_RADIUS)))[set BREEDING_DESTROY? true]
+    if(BREEDING_DESTROY?)[replace-breeding-site controlType show "REPLACED"]
+  ]
+end
+to update-fogging-parameters
+  set TIME_SINCE_LAST_FOGGING (ticks - LAST_FOGGING_TIME)
+  set FOGGING_KILL_PROBABILITY (fogging-process TIME_SINCE_LAST_FOGGING)
+end
+to fogging-refill [releaseBool releaseDelay]
+  if(releaseBool and (ticks mod releaseDelay = 0))[
+    ;print "FOG"
+    set LAST_FOGGING_TIME ticks
+  ]
+end

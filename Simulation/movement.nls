@@ -1,0 +1,34 @@
+;;***************************HEADERS************************************************************************************************************
+;move-pseudo-random-walking :: Performs a pseudo-random walk procedure**
+;move-probabilistically-towards :: Moves towards a target in a pseudo-random walk way**
+;wander-around-house :: Pseudo-random walk procedure in which a human moves around a given house(requires humans class with "group" variable and houses with "group" variable)**
+;wander-towards-house :: Pseudo-random walk procedure in which a human moves around a given house(requires humans class with "group" variable and houses with "group" variable)**
+;;****************************BODY**************************************************************************************************************
+to move-pseudo-random-walking [speed deviation_speed]
+  left random-integer-between -180 179
+  let random-speed random-float speed
+  forward random-speed
+end
+to move-probabilistically-towards [target speed probability deviation_speed]
+  if(target != nobody)
+  [
+    ifelse(random-bool probability)
+    [
+      let distanceTemp ([distance myself] of target)
+      if( ([distance myself] of target) != 0)
+      [
+        set heading (towards target)
+        ifelse(distanceTemp > speed)[forward speed][forward distanceTemp]
+      ]
+    ]
+    [  
+      move-pseudo-random-walking speed deviation_speed
+    ]
+  ]
+end
+to wander-around-house [groupName speed probability deviation_speed]
+  if(groupP = groupName)[move-probabilistically-towards (one-of houses with [group = groupName]) speed probability deviation_speed]
+end
+to wander-towards-house [groupName speed probability deviation_speed]
+  move-probabilistically-towards (one-of houses with [group = groupName]) speed probability deviation_speed
+end

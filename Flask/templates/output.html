@@ -1,0 +1,47 @@
+<html>
+<body>
+
+{% block content %}
+    <h1>Cases Plot</h1>
+    <form action="" method="post">
+        {{ form.hidden_tag() }}
+
+        {{form.statesCheckbox.label}}
+        {{form.statesCheckbox(class_="form-control")}}
+<!--         <select name="comp_select" class="selectpicker form-control">
+            {% for o in data %}
+            <option value="{{ o.name }}">{{ o.name }}</option>
+        	{% endfor %}
+        </select> -->
+        <p>
+            {{ form.numberOfStates.label }}<br>
+            {{ form.numberOfStates(size=32) }}
+        </p>
+        <p>
+            {{ form.year.label }}<br>
+            {{ form.year(size=32) }}
+        </p>
+        <p>{{ form.submit() }}</p>
+    </form>
+{% endblock %}
+
+<p>
+{% if result != None %}
+<img src="data:image/png;base64,{{ result }}" width="800">
+{% endif %}
+
+<!-- Flash message -->
+<hr>
+        {% with messages = get_flashed_messages() %}
+        {% if messages %}
+        <ul>
+            {% for message in messages %}
+            <li>{{ message }}</li>
+            {% endfor %}
+        </ul>
+        {% endif %}
+        {% endwith %}
+
+</p>
+</body>
+</html>

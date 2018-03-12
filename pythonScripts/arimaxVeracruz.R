@@ -1,7 +1,7 @@
 library(readr)
 library(ggplot2)
-#veracruz <- read_csv("E:/ZikNet/pythonScripts/veracruzModel.csv")
-veracruz <- VeracruzWeatherDataCopy
+veracruz <- read_csv("E:/ZikNet/pythonScripts/veracruzModel.csv")
+#veracruz <- VeracruzWeatherDataCopy
 View(veracruz)
 
 ####################
@@ -14,6 +14,7 @@ require(gridExtra)
 
 #df <- read_csv("E:/ZikNet/pythonScripts/veracruzModel.csv")
 df <- veracruz
+X <- veracruz$Casos
 p1 <- ggplot(df, aes(x = X, y = Busquedas)) +
   ylab("Busquedas") +
   xlab("") +
@@ -26,13 +27,13 @@ p2 <- ggplot(df, aes(x = X, y = Precipitacion)) +
   geom_line() +
   expand_limits(x = 0, y = 0)
 
-p3 <- ggplot(df, aes(x = X, y = precipProbability)) +
-  ylab("precipProbability") +
+p3 <- ggplot(df, aes(x = X, y = Temp)) +
+  ylab("precipitacion") +
   xlab("Period") +
   geom_line() +
   expand_limits(x = 0, y = 0)
 
-grid.arrange(p1, p2, p3, ncol=1, nrow=3)
+grid.arrange(p1, p2, p3)
 
 ####################
 #                  #

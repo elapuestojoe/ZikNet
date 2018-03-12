@@ -5,6 +5,7 @@ import numpy as np
 from networkParser import parseContacts
 import sys
 import os.path
+import parserNew
 # 1 tick/5 minutes
 
 def draw_graph(nodes, edges, infectedPeople, susceptible, exposed, recovered):
@@ -53,13 +54,13 @@ def getFilename():
         filename = sys.argv[1]
     else:
         print("File doesn't exist, using default filename: data/CatemacoOxitec_HET 26749.xml ")
-        #filename = "data\CatemacoNetworks\CatemacoBaseline_HET\CatemacoBaseline_HET 41898.xml"
-        filename = "data\CatemacoNetworks\CatemacoBaseline_HOM\CatemacoBaseline_HOM 10730.xml"
-    print("Filename: {}".format(filename))
+        filename = "data\CatemacoFoggingOvitraps_HET 382772.xml"
+    # print("Filename: {}".format(filename))
     return filename
 
 filename = getFilename()
-contactList, biteList, timeList = parseContacts(filename)
+# contactList, biteList, timeList = parseContacts(filename) # TEMP
+contactList, biteList, timeList = parserNew.parseImproved()
 
 infectionsPerContact = {}
 for i in contactList:
@@ -95,9 +96,16 @@ def status():
 # Initial conf
 print("INITIAL CONFIGURATION")
 status()
+
+# Temp
+# draw_graph(contactList, edges, infectedPeople, susceptible, exposed, recovered)
+
+print(timeListSortedKeys[0])
+print(timeListSortedKeys[-1])
 # Proportion of individuals who are asymptomatic  0.80    (ZWG, 2016)
 fourDays = 1152
 for key in timeListSortedKeys:
+
     currentMosquitoes = timeList[key]
     currTime = int(key)
     for mosquito in currentMosquitoes:
@@ -127,15 +135,18 @@ for key in timeListSortedKeys:
                     edges.append((mosquitoesContact[mosquito], currentBiteList["bites"][i]))
                     infectionsPerContact[mosquitoesContact[mosquito]].append(bited)
                     print("Human {} got infected by {} {} at time {}".format(currentBiteList["bites"][i], mosquito, mosquitoesContact[mosquito], currTime))
-                    status()
+                    # status()
+                    # draw_graph(contactList, edges, infectedPeople, susceptible, exposed, recovered)
     removals = []
     for e in exposed:
         if(currTime >= exposed[e]+fourDays):
             infectedPeople[e] = currTime
             removals.append(e)
             print("{} went from exposed to infected at {}".format(e,exposed[e]+fourDays))
+            
     for r in removals:
         exposed.pop(r)
+        # draw_graph(contactList, edges, infectedPeople, susceptible, exposed, recovered)
 
 
     removals = []
@@ -146,6 +157,7 @@ for key in timeListSortedKeys:
             print("{} went from infectious to recovered at time {}".format(e, infectedPeople[e]+fourDays))
     for r in removals:
         infectedPeople.pop(r)
+        # draw_graph(contactList, edges, infectedPeople, susceptible, exposed, recovered)
 
     # UPDATE SEIR
     SEIR[currTime] = [len(susceptible), len(exposed), len(infectedPeople), len(recovered)]

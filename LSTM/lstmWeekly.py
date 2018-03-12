@@ -35,6 +35,11 @@ def series_to_supervised(data, n_in=1, n_out=1, dropnan=True):
 
 dataset = read_csv('data/Bahia.csv', header=0, index_col=0)
 dataset.drop(["Date"], axis=1, inplace=True)
+
+# 
+dataset.drop(["Rain"], axis=1, inplace=True)
+dataset.drop(["Temp"], axis=1, inplace=True)
+# 
 values = dataset.values
 # ensure all data is float
 values = values.astype('float32')
@@ -43,15 +48,15 @@ values = values.astype('float32')
 scaler = MinMaxScaler(feature_range=(0, 1))
 scaled = scaler.fit_transform(values)
 # specify the number of lag hours
-n_hours = 2
-n_features = 4
+n_hours = 6
+n_features = 2
 # frame as supervised learning
 reframed = series_to_supervised(scaled, n_hours, 1)
 print(reframed.shape)
  
 # split into train and test sets
 values = reframed.values
-n_train_hours = 52
+n_train_hours = 10
 train = values[:n_train_hours, :]
 test = values[n_train_hours:, :]
 # split into input and outputs
@@ -65,15 +70,15 @@ test_X = test_X.reshape((test_X.shape[0], n_hours, n_features))
 print(train_X.shape, train_y.shape, test_X.shape, test_y.shape)
 
 model = None
-if(isfile("model.json") and isfile("model.h5")):
+if(isfile("model3.json") and isfile("model3.h5")):
 # if False:
-	json_file = open("model.json", "r")
+	json_file = open("model3.json", "r")
 	loaded_model_json = json_file.read()
 	json_file.close()
 	model = model_from_json(loaded_model_json)
 
 	#load weights
-	model.load_weights("model.h5")
+	model.load_weights("model3.h5")
 	model.compile(loss="mae", optimizer="adam")
 	print("Loaded model from disk")
 else:
@@ -111,20 +116,21 @@ yhat = model.predict(test_X)
 test_X = test_X.reshape((test_X.shape[0], n_hours*n_features))
 # invert scaling for forecast
 print("T", test_X)
-inv_yhat = concatenate((yhat, test_X[:,-3:]), axis=1)
+inv_yhat = concatenate((yhat, test_X[:,-(n_features-1):]), axis=1)
 inv_yhat = scaler.inverse_transform(inv_yhat)
 inv_yhat = inv_yhat[:,0]
 print(inv_yhat)
 # invert scaling for actual
 test_y = test_y.reshape((len(test_y), 1))
-inv_y = concatenate((test_y, test_X[:, -3:]), axis=1)
+inv_y = concatenate((test_y, test_X[:, -(n_features-1):]), axis=1)
 inv_y = scaler.inverse_transform(inv_y)
 inv_y = inv_y[:,0]
 
 # calculate RMSE
 rmse = sqrt(mean_squared_error(inv_y, inv_yhat))
 print('Test RMSE: %.3f' % rmse)
-
+print("Total", sum(inv_y))
+print("len", len(inv_y))
 print("REAL",inv_y)
 
 # pyplot.plot(test_X, inv_y, "g--", test_X, inv_yhat, "r--")

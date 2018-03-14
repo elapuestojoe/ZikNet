@@ -7,8 +7,7 @@ pytrend = TrendReq()
 # Create payload and capture API tokens. Only needed for interest_over_time(), interest_by_region() & related_queries()
 # pytrend.build_payload(kw_list=['zika'], geo="MX", timeframe="2017-11-1 2017-11-9")
 
-file = open("2015-2017VeracruzSearches.csv", "w")
-
+file = open("NuevoLeonSearches.csv", "w")
 
 weeks = getEpidemiologicalWeeks(2017)
 weekEpiArray = []
@@ -24,7 +23,7 @@ for i in range(len(weeks)):
 	nextWeekC = nextWeek - datetime.timedelta(days=1)
 	timeframe = "{}-{}-{} {}-{}-{}".format(year,month,day,nextWeekC.year,nextWeekC.month,nextWeekC.day)
 	print("{}-{}-{} -> {}-{}-{}".format(year,month,day,nextWeekC.year,nextWeekC.month,nextWeekC.day))
-	pytrend.build_payload(kw_list=['zika'], geo="BR", timeframe=timeframe)
+	pytrend.build_payload(kw_list=['zika'], geo="MX", timeframe=timeframe)
 	results = pytrend.interest_by_region(resolution="CITY")
 	# if a city's search index is 0 it doesn't appear on results, so we have to keep track of it
 	tempWeekArray = {}

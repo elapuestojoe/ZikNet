@@ -1,11 +1,16 @@
 import requests
 import datetime
 
-key = "ffc914ba826e4727e4268cd35f46bb1c"
+key = None
 
+# latitude = "19.1500" # Veracruz
+# altitude = "-96.1170" # Veracruz
 
-latitude = "19.1500" # Veracruz
-altitude = "-96.1170" # Veracruz
+# latitude = -14.8630 # Vitoria da conquista, Bahia, Brazil
+# altitude = -40.8630 # Vitoria da conquista, Bahia, Brazil
+
+latitude = "25.7330" #Nuevo León
+altitude = "-100.3000" # Nuevo León
 
 baseURL = "https://api.darksky.net/forecast/{}/{},{}".format(key, latitude, altitude)
 
@@ -16,9 +21,7 @@ dateObj = datetime.datetime(dateArray[2],dateArray[1],dateArray[0])
 
 numberOfDays = int(input("Enter number of days to calculate: "))
 
-
-
-fileName = "Veracruz_{}_{}.csv".format(dateString,numberOfDays)
+fileName = "NuevoLeon_{}_{}.csv".format(dateString,numberOfDays)
 file = open(fileName, "w")
 file.write("coordinates,date,precipType,precipProbability,precipIntensity,precipIntensityMax,temperatureHigh,temperatureLow,humidity\n")
 keys = ["precipType","precipProbability","precipIntensity","precipIntensityMax","temperatureHigh","temperatureLow","humidity"]

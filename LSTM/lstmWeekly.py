@@ -70,15 +70,15 @@ test_X = test_X.reshape((test_X.shape[0], n_hours, n_features))
 print(train_X.shape, train_y.shape, test_X.shape, test_y.shape)
 
 model = None
-if(isfile("model3.json") and isfile("model3.h5")):
+if(isfile("model.json") and isfile("model.h5")):
 # if False:
-	json_file = open("model3.json", "r")
+	json_file = open("model.json", "r")
 	loaded_model_json = json_file.read()
 	json_file.close()
 	model = model_from_json(loaded_model_json)
 
 	#load weights
-	model.load_weights("model3.h5")
+	model.load_weights("model.h5")
 	model.compile(loss="mae", optimizer="adam")
 	print("Loaded model from disk")
 else:

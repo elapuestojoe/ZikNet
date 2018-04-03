@@ -75,8 +75,8 @@ end
 to act-dead
   ;Mosquito actions while dying state (finalizes bites list)**
   if(length bitten_list > 1)[
-    file-open "mosquitos.txt"
-    file-print (word "{" bitten_list "}")
+    ;file-open "mosquitos.txt"
+    ;file-print (word "{" bitten_list "}")
     set GLOBAL_BITES_LIST lput (word "{" bitten_list "}") GLOBAL_BITES_LIST
     set life_stage_ticks_list (lput life_stage_ticks life_stage_ticks_list)
   ]

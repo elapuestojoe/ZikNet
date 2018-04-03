@@ -48,7 +48,7 @@ values = values.astype('float32')
 scaler = MinMaxScaler(feature_range=(0, 1))
 scaled = scaler.fit_transform(values)
 # specify the number of lag hours
-n_hours = 6
+n_hours = 4
 n_features = 2
 # frame as supervised learning
 reframed = series_to_supervised(scaled, n_hours, 1)

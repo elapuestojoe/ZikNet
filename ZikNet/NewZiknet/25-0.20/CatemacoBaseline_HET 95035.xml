@@ -1,0 +1,15 @@
+<experiment>
+	<header>
+		<title>Novel Control Measures.</title>
+		<author>HMSC</author>
+		<date>08:12:55.578 PM 09-Apr-2018</date>
+		<description>Replicating RIDL/Wolbachia papers in smaller scale.</description>
+	</header>
+	<parameters>
+		<parameter id="SecondsPerTick">300</parameter>
+		<parameter id="ScenarioNumber">4</parameter>
+		<parameter id="Temperature">25</parameter>
+		<parameter id="BreedingZonesNumber">25</parameter>
+		<independent id="HUMAN_VISITING_PROBABILITY">0.2</independent>
+	</parameters>
+	<ticks_outputs>

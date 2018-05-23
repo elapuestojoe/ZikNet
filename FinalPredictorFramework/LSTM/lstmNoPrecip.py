@@ -11,8 +11,8 @@ from keras.models import model_from_json
 from os.path import isfile
 import numpy as np 
 modelName = "modelNoPrecip"
-# population = 8112505 #DEBUG VERACRUZ
-population = 15203934 #DEBUG BAHIA
+population = 8112505 #DEBUG VERACRUZ
+# population = 15203934 #DEBUG BAHIA
 
 def series_to_supervised(data, n_in=1, n_out=1, dropnan=True):
 	n_vars = 1 if type(data) is list else data.shape[1]
@@ -37,24 +37,13 @@ def series_to_supervised(data, n_in=1, n_out=1, dropnan=True):
 		agg.dropna(inplace=True)
 	return agg
 
-# dataset = read_csv('data/Weekly-Veracruz_15-11-2015_848.csv', header=0, index_col=1)
-dataset = read_csv('data/Weekly-Bahia_04-01-2015_504.csv', header=0, index_col=1) # DEBUG
-dataset.drop(["coordinates", "precipProbability", "precipIntensity", "precipIntensityMax"], axis=1, inplace=True)
+dataset = read_csv('data/Weekly-Veracruz_28-11-2015-24-03-2018.csv', header=0, index_col=1) # DEBUG
 
-# ToDo: Normalize/Scale each column 
-
-featureScaler = MinMaxScaler(feature_range=(0, 1))
-dataset[["temperatureHigh", "temperatureLow", "humidity", "searches"]] = \
-	featureScaler.fit_transform(dataset[["temperatureHigh", "temperatureLow", "humidity", "searches"]])
-
-#yearNumber stays the same
+dataset[["Searches"]] /= 100
 
 #Try converting cases to cases per 100K 
-dataset[["cases"]] = dataset[["cases"]].apply(lambda x: x*100000/population, axis=1)
+dataset[["Cases"]] = dataset[["cases"]].apply(lambda x: x*100000/population, axis=1)
 
-# outputScaler = RobustScaler()
-# outputScaler = StandardScaler()
-# dataset[["cases"]] = outputScaler.fit_transform(dataset[["cases"]])
 
 values = dataset.values
 # ensure all data is float
@@ -72,8 +61,8 @@ total_features = len(values[0])
 scaled = values #TEMP
 
 #Set number of lag weeks
-n_weeks = 5
-n_features = 6
+n_weeks = 3
+n_features = 2
 
 # Convert to supervised learning
 reframed = series_to_supervised(scaled, n_weeks, 1)
@@ -81,7 +70,7 @@ print("Reframed Shape: ", reframed.shape) #Returns an array with shape (n, 32) 3
 
 # split into train and test sets
 values = reframed.values
-n_train_weeks = int(reframed.shape[0]*0.2) #ToDo - use a generator  #DEBUG
+n_train_weeks = int(reframed.shape[0]*0.2)
 print("Using {} train hours".format(n_train_weeks))
 train = values[:n_train_weeks, :]
 test = values [n_train_weeks:, :]

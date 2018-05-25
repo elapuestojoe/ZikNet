@@ -21,7 +21,7 @@ def parseContacts(filename):
 	# e = xml.etree.ElementTree.parse(filename).getroot()
 	# e = xml.etree.ElementTree.parse('CatemacoFogging_HET 24959.xml').getroot()
 	# e = xml.etree.ElementTree.parse("Validation.xml")
-	#e = xml.etree.ElementTree.parse('data/CatemacoOxitec_HET 26749.xml').getroot()
+	# e = xml.etree.ElementTree.parse('data/CatemacoOxitec_HET 26749.xml').getroot()
 	# e = xml.etree.ElementTree.parse('CatemacoWolbachia_HET 1238.xml').getroot()
 
 	e = xml.etree.ElementTree.parse(filename).getroot()

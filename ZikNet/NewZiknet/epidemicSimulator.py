@@ -67,10 +67,11 @@ def simulateEpidemic(filename):
 	# Diccionario SEIR para plots
 	SEIR = {}
 
-	# infectar a 2 personas
+	# infectar a 3 personas
 	contactList = sorted(contactList)
 	# print("contactList: {}".format(contactList))
-	randomInfected = random.sample(contactList,5)
+	randomInfected = random.sample(contactList,3)
+	
 	initialTime = 0 if len(timeListSortedKeys) == 0 else int(timeListSortedKeys[0])
 	infectedPeople = {}
 	susceptible = contactList.copy()
@@ -137,7 +138,9 @@ def simulateEpidemic(filename):
 						# draw_graph(contactList, edges, infectedPeople, susceptible, exposed, recovered)
 		removals = []
 		for e in exposed:
-			if(currTime >= exposed[e]+threeDays):
+			# https://www.sciencedirect.com/science/article/pii/S1755436517301093
+			if(currTime >= exposed[e]+ (threeDays * 2) ):
+			# if(currTime >= exposed[e]+ (threeDays * 1) ):
 				infectedPeople[e] = currTime
 				removals.append(e)
 				# print("{} went from exposed to infected at {}".format(e,exposed[e]+fourDays))
@@ -149,7 +152,8 @@ def simulateEpidemic(filename):
 
 		removals = []
 		for e in infectedPeople:
-			if(currTime >= infectedPeople[e]+tenDays):
+			if(currTime >= infectedPeople[e]+ (fourDays + threeDays)):
+			# if(currTime >= infectedPeople[e]+ (fourDays)):
 				recovered[e] = currTime
 				removals.append(e)
 				# print("{} went from infectious to recovered at time {}".format(e, infectedPeople[e]+fourDays))
@@ -244,12 +248,12 @@ if __name__ == '__main__':
 
 		# "30-0"		: "30-0",
 		# "30-0.10"	: "30-0.10",
-		# "30-0.20"	: "30-0.20",
+		# # "30-0.20"	: "30-0.20",
 
-		# "GMAP0"		: "GMAP0",
+		"GMAP0"		: "GMAP0",
 		# "GMAP0.05"	: "GMAP0.05",
-		# "GMAP0.10" 	: "GMAP0.10",
-		# "GMAP0.20"	: "GMAP0.20",		
+		"GMAP0.10" 	: "GMAP0.10",
+		"GMAP0.20"	: "GMAP0.20",		
 
 	}
 
@@ -262,16 +266,16 @@ if __name__ == '__main__':
 	# 	"GMAP1.00"	: "GMAP1" 
 	# }
 
-	folders = {
-		"BaseLine_HOM"			: "Datasets/CatemacoNetworks/CatemacoBaseline_HOM",
-		"Baseline_HET"			: "Datasets/CatemacoNetworks/CatemacoBaseline_HET",
-		"Fogging_HOM"			:  "Datasets/CatemacoNetworks/CatemacoFogging_HOM",
-		"Fogging_HET"			: "Datasets/CatemacoNetworks/CatemacoFogging_HET",
-		"Oxitec_HOM"			: "Datasets/CatemacoNetworks/CatemacoOxitec_HOM",
-		"Oxitec_HET"			: "Datasets/CatemacoNetworks/CatemacoOxitec_HET",
-		"Wolbachia_HOM"			: "Datasets/CatemacoNetworks/CatemacoWolbachia_HOM",
-		"Wolbachia_HET"		: "Datasets/CatemacoNetworks/CatemacoWolbachia_HET"
-	}
+	# folders = {
+	# 	"BaseLine_HOM"			: "Datasets/CatemacoNetworks/CatemacoBaseline_HOM",
+	# 	"Baseline_HET"			: "Datasets/CatemacoNetworks/CatemacoBaseline_HET",
+	# 	"Fogging_HOM"			:  "Datasets/CatemacoNetworks/CatemacoFogging_HOM",
+	# 	"Fogging_HET"			: "Datasets/CatemacoNetworks/CatemacoFogging_HET",
+	# 	"Oxitec_HOM"			: "Datasets/CatemacoNetworks/CatemacoOxitec_HOM",
+	# 	"Oxitec_HET"			: "Datasets/CatemacoNetworks/CatemacoOxitec_HET",
+	# 	"Wolbachia_HOM"			: "Datasets/CatemacoNetworks/CatemacoWolbachia_HOM",
+	# 	"Wolbachia_HET"		: "Datasets/CatemacoNetworks/CatemacoWolbachia_HET"
+	# }
 
 	for folderKey in folders:
 		result = []

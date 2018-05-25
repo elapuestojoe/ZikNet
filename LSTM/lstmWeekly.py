@@ -33,7 +33,7 @@ def series_to_supervised(data, n_in=1, n_out=1, dropnan=True):
 		agg.dropna(inplace=True)
 	return agg
 
-dataset = read_csv('data/Bahia.csv', header=0, index_col=0)
+dataset = read_csv('data/Nuevo_Leon.csv', header=0, index_col=0)
 dataset.drop(["Date"], axis=1, inplace=True)
 
 # 
@@ -56,7 +56,7 @@ print(reframed.shape)
  
 # split into train and test sets
 values = reframed.values
-n_train_hours = 10
+n_train_hours = 0
 train = values[:n_train_hours, :]
 test = values[n_train_hours:, :]
 # split into input and outputs

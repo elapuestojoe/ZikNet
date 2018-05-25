@@ -33,7 +33,7 @@ for file in sorted(os.listdir(directory)):
 		casesPerCity[row.location].append(row.value)
 	dates.append(date)
 
-file= open("MexicoCases.csv", "w")
+file= open("MexicoCases2015-2018.csv", "w")
 file.write("CITY,")
 file.write(",".join(dates))
 file.write("\n")

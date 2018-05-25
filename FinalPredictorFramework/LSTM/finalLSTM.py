@@ -38,8 +38,8 @@ populations = {
 	"data/Test/Weekly-Chiapas_28-11-2015-24-03-2018.csv" : 5217908,
 
 	"data/Test/Weekly-NuevoLeon_28-11-2015-24-03-2018.csv" : 5119504,
-	"data/Test/Weekly-Mato_Grosso_10-01-2015-20-02-2016.csv" : 3376000,
-	"data/Test/Weekly-Bahia_10-01-2015-15-05-2016.csv" : 15200000,
+	"data/Test/Weekly-Mato_Grosso_10-01-2015-20-02-2016.csv" : 3344544,
+	"data/Test/Weekly-Bahia_10-01-2015-15-05-2016.csv" : 15344447,
 	
 }
 # population = 8112505 #DEBUG VERACRUZ
@@ -183,11 +183,15 @@ def main():
 	else:
 		global populations
 
-	
+		# testFile = trainStates["Veracruz"]
+		# testFile = trainStates["Yucatan"]
+		# testFile = trainStates["Guerrero"]
+		testFile = trainStates["QuintanaRoo"]
+
 		# testFile = testStates["NuevoLeon"]
 		# testFile = testStates["MatoGrosso"]
 		# testFile = testStates["Bahia"]
-		testFile = testStates["Chiapas"]
+		# testFile = testStates["Chiapas"]
 
 		scale = populations[testFile]
 		x,y = getXY(testFile)
@@ -197,11 +201,11 @@ def main():
 		inv_yPred = np.apply_along_axis(lambda x: x * scale / 100000, 1, predictions)
 		inv_y = np.apply_along_axis(lambda x: x * scale / 100000, 1, y)
 
-		rmse = mean_squared_error(inv_y, inv_yPred)
-		print('Test MSE: %.3f' % rmse)
+		rmse = sqrt(mean_squared_error(inv_y, inv_yPred))
+		print('Test RMSE: %.3f' % rmse)
 		print("Total", sum(inv_y))
 		print("len", len(inv_y))
-		pyplot.title("Cases {} MSE: {:.2f}".format(formatFilename(testFile), rmse))
+		pyplot.title("Cases {} RMSE: {:.2f}".format(formatFilename(testFile), rmse))
 		pyplot.ylabel("Cases")
 		pyplot.xlabel("Week #")
 		pyplot.plot(inv_y, label="Cases")

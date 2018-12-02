@@ -1,6 +1,7 @@
 from pytrends.request import TrendReq
 from epiweeks import getEpidemiologicalWeeks,getYMD,getNextWeek
 import datetime
+
 # Login to Google. Only need to run this once, the rest of requests will use the same session.
 pytrend = TrendReq()
 

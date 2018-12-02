@@ -1,0 +1,4 @@
+states = {
+	"SantanderNorte" : 
+		["NORTEDESANTANDER", "NORTESANTANDER"]	
+}
